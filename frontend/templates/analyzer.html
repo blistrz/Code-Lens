@@ -575,7 +575,11 @@ function initDraftAutoSave() {
         // Restore from localStorage draft if it exists
         const draft = localStorage.getItem('cl-editor-draft');
         if (draft !== null) {
-            codeInput.value = draft;
+            const normalizedDraft = draft.replace(/\r\n/g, '\n').trim();
+            const defaultText = "# Enter your Python code here\ndef example_function():\n    pass".trim();
+            if (normalizedDraft !== defaultText && normalizedDraft !== "") {
+                codeInput.value = draft;
+            }
         }
 
         // Add auto-save change listener
