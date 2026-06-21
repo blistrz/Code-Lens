@@ -383,7 +383,7 @@ def signup(request):
                 last_name=last_name
             )
             UserProfile.objects.create(user=user)
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect('home')
 
         except IntegrityError:
