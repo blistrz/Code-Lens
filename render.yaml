@@ -2,7 +2,7 @@ services:
   - type: web
     name: codelens
     runtime: python
-    buildCommand: pip install -r backend/requirements.txt && python backend/manage.py collectstatic --noinput
+    buildCommand: pip install -r backend/requirements.txt && python backend/manage.py collectstatic --noinput && python backend/manage.py migrate && python backend/manage.py createsuperuser --no-input || true
     startCommand: gunicorn --chdir backend codelens.wsgi:application
     envVars:
       - key: DATABASE_URL
@@ -24,4 +24,10 @@ services:
       - key: GITHUB_CLIENT_ID
         sync: false
       - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
         sync: false
