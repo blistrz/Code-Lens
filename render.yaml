@@ -15,3 +15,5 @@ services:
         generateValue: true
       - key: ALLOWED_HOSTS
         value: "*"
+      - key: PYTHON_VERSION
+        value: 3.12.3
