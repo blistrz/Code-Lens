@@ -1,0 +1,163 @@
+/* codelens/static/css/print.css */
+
+/* 1. Print Engine Resets */
+* {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+
+/* 2. Hide Web Clutter */
+.cl-sidebar, .cl-topbar, .cl-landing-nav, .cl-analysis__toolbar, .cl-tabs-vertical, .cl-tab-v,
+.report-toolbar, .report-nav, .report-nav__btn, .btn-ai,
+button, .cl-btn, [id^="explain-"], .ai-response, .fas, .far, .fab,
+.cl-footer, .cl-theme-btn, .cl-topbar__menu {
+    display: none !important;
+}
+
+@page {
+    size: A4;
+    margin: 0mm !important; /* Forces headers/footers to disappear */
+}
+
+body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-family: 'Inter', 'Segoe UI', sans-serif !important;
+    padding: 15mm !important; /* Safe margin for the physical paper */
+}
+
+html, body, main, .tab-content {
+    display: block !important;
+    position: static !important; 
+    height: auto !important;
+    overflow: visible !important;
+}
+
+/* 3. Report Header & Cards */
+.print-header {
+    display: block !important;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 15px !important;
+    margin-bottom: 30px !important;
+}
+
+.print-header h1 {
+    font-size: 24pt !important;
+    margin: 0 !important;
+    font-family: 'Syne', sans-serif !important;
+    color: #0f172a !important;
+}
+
+.analysis-card,
+.result-card {
+    border: 1px solid #cbd5e1 !important;
+    margin-bottom: 20px !important;
+    padding: 20px !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    page-break-inside: auto !important; 
+    display: block !important; /* Kills flex/grid layouts that break printing */
+}
+
+.report-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+}
+
+.report-workspace {
+    display: block !important;
+}
+
+.report-hero .report-score,
+.report-stats {
+    display: none !important;
+}
+
+.card-header {
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 15px !important;
+    page-break-after: avoid !important;
+    display: block !important; 
+}
+
+/* ========================================================
+   4. COLOR & BORDER CORRECTIONS
+   ======================================================== */
+
+.analysis-card div[style*="background:#0d0d0d"],
+.analysis-card div[style*="background:#000"] {
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+pre, .code-screen, .code-block {
+    font-family: 'Consolas', 'Courier New', monospace !important;
+    font-size: 9pt !important;
+    white-space: pre-wrap !important; 
+    word-break: break-word !important;
+    background: #f1f5f9 !important; 
+    color: #000000 !important; 
+    border: 1px solid #cbd5e1 !important; 
+    padding: 15px !important;
+    margin-top: 10px !important;
+    border-radius: 6px !important;
+    page-break-inside: auto !important; 
+    line-height: 1.6 !important; /* FIX 1: Explicit line-height prevents text from being sliced horizontally */
+}
+
+pre code, pre span, .code-screen code, .code-screen span {
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    display: inline !important; 
+}
+
+/* ========================================================
+   5. PAGE BREAK SLICING FIXES
+   ======================================================== */
+
+/* FIX 2: Disable CSS Grid. Browsers ignore page-breaks when inside a grid! */
+div[style*="display: grid"] {
+    display: block !important;
+}
+
+/* FIX 3: Target the inner Code Smell boxes and force them to stay together */
+#smells .analysis-card > div > div > div {
+    page-break-inside: avoid !important;
+    margin-bottom: 15px !important;
+    display: block !important;
+}
+
+/* FIX 4: Prevent single stranded lines of text at the top or bottom of a page */
+p, pre, code {
+    orphans: 3 !important;
+    widows: 3 !important;
+}
+/* ========================================================
+   6. ABSOLUTE ANTI-SLICING FOR ERROR CARDS
+   ======================================================== */
+
+/* Force all cards and their inner wrappers to act as solid, unbreakable blocks */
+.analysis-card,
+.analysis-card .card-header,
+.analysis-card .code-screen {
+    display: block !important;
+    float: none !important;
+    position: static !important;
+    page-break-inside: avoid !important; /* Legacy browser support */
+    break-inside: avoid !important; /* Modern browser support */
+    -webkit-column-break-inside: avoid !important; /* Chrome/Edge specific */
+}
+
+/* Ensure margins don't collapse and trick the print engine */
+.analysis-card {
+    margin-bottom: 30px !important; 
+    padding: 20px !important;
+}

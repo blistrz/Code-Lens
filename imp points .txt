@@ -1,0 +1,53 @@
+Sure—here it is in **clear points**:
+
+---
+
+### 🔹 How to Identify Code Needs Refactoring
+
+1. **Hard to read**
+
+   * Long functions
+   * Confusing logic
+   * Deep nesting
+
+2. **Repeated code (DRY violation)**
+
+   * Same code written multiple times
+
+3. **Function does too many tasks**
+
+   * One function handling multiple responsibilities
+
+4. **Too many if-else conditions**
+
+   * Complex and nested decision logic
+
+5. **Poor naming**
+
+   * Variables/functions like `x`, `temp`, `abc`
+
+6. **Difficult to modify**
+
+   * Small change breaks other parts
+
+7. **Not reusable**
+
+   * Code cannot be used elsewhere
+
+8. **Frequent bugs**
+
+   * Errors appear often due to messy structure
+
+9. **Hard to debug**
+
+   * Takes too much time to find issues
+
+10. **Inconsistent style**
+
+* Different coding styles in same file
+
+---
+
+### 🔑 Simple Rule:
+
+👉 *If code works but looks messy or confusing → refactor it.*

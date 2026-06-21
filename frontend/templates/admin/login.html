@@ -1,0 +1,76 @@
+{% extends "registration/base.html" %}
+
+{% load i18n jazzmin %}
+{% get_jazzmin_settings request as jazzmin_settings %}
+{% get_jazzmin_ui_tweaks as jazzmin_ui %}
+
+{% block content %}
+    <p class="login-box-msg">{{ jazzmin_settings.welcome_sign }}</p>
+    <form action="{{ app_path }}" method="post">
+        {% csrf_token %}
+        {% if user.is_authenticated %}
+            <p class="errornote">
+                <div class="callout callout-danger" style="border-left: 4px solid #dc3545; background-color: rgba(220, 53, 69, 0.08); padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem;">
+                    <p style="margin-bottom: 0.75rem; color: #dc3545; font-weight: 600; font-size: 0.9rem;">
+                        {% blocktrans trimmed %}
+                            You are authenticated as <strong>{{ username }}</strong>, but are not authorized to
+                            access this page.
+                        {% endblocktrans %}
+                    </p>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="{% url 'logout' %}?next={% url 'admin:index' %}" class="btn btn-xs btn-danger" style="font-size: 0.75rem; padding: 0.35rem 0.65rem; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; border-radius: 4px; font-weight: 600; color: #fff; background-color: #dc3545; border: none;">
+                            <i class="fas fa-sign-out-alt"></i> Log Out
+                        </a>
+                        <a href="{% url 'home' %}" class="btn btn-xs btn-secondary" style="font-size: 0.75rem; padding: 0.35rem 0.65rem; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; border-radius: 4px; font-weight: 600; color: #fff; background-color: #6c757d; border: none;">
+                            <i class="fas fa-home"></i> App Home
+                        </a>
+                    </div>
+                </div>
+            </p>
+        {% endif %}
+        {% if form.errors %}
+            {% if form.username.errors %}
+                <div class="callout callout-danger">
+                    <p>{{ form.username.label }}: {{ form.username.errors|join:', ' }}</p>
+                </div>
+            {% endif %}
+            {% if form.password.errors %}
+                <div class="callout callout-danger">
+                    <p>{{ form.password.label }}: {{ form.password.errors|join:', ' }}</p>
+                </div>
+            {% endif %}
+            {% if form.non_field_errors %}
+                <div class="callout callout-danger">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endif %}
+        <div class="input-group mb-3">
+            <input type="text" name="username" class="form-control" placeholder="{{ form.username.label }}" required>
+            <span class="input-group-text">
+                <i class="fas fa-user"></i>
+            </span>
+        </div>
+        <div class="input-group mb-3">
+            <input type="password" name="password" class="form-control" placeholder="{{ form.password.label }}" required>
+            <span class="input-group-text">
+                <i class="fas fa-lock"></i>
+            </span>
+        </div>
+        {% url 'admin_password_reset' as password_reset_url %}
+        {% if password_reset_url %}
+            <div class="mb-3 text-center">
+                <a href="{{ password_reset_url }}">
+                    {% trans 'Forgotten your password or username?' %}
+                </a>
+            </div>
+        {% endif %}
+        <div class="d-grid">
+            <button type="submit" class="btn {{ jazzmin_ui.button_classes.primary }}">
+                {% trans "Log in" %}
+            </button>
+        </div>
+    </form>
+{% endblock %}

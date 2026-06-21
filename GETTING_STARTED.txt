@@ -1,0 +1,551 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    CODELENS - COMPLETE SETUP GUIDE
+          Django + Python + SQL Server Full Stack Application
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 PROJECT OVERVIEW
+═══════════════════════════════════════════════════════════════════════════════
+
+Your CodeLens application has been fully set up with:
+✓ Django Web Framework (Python)
+✓ SQL Server Database Connection
+✓ User Authentication System (Login/Signup)
+✓ Code Analysis Features
+✓ Dynamic Page Navigation
+✓ Analysis History with Database Storage
+✓ Responsive UI with CSS & JavaScript
+
+Project Location: c:\Users\butta\OneDrive\Desktop\new bpee\django_project\
+
+
+📦 INSTALLATION STEPS
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 1: Install Python Dependencies
+-----------------------------------
+
+Open Command Prompt and go to the project directory:
+
+cd c:\Users\butta\OneDrive\Desktop\new bpee\django_project\
+
+Create virtual environment:
+python -m venv venv
+
+Activate virtual environment:
+venv\Scripts\activate
+
+Install required packages:
+pip install -r requirements.txt
+
+This will install:
+- Django 4.2.8
+- pyodbc (SQL Server connection)
+- django-pyodbc-azure (Django + SQL Server integration)
+- python-decouple (Environment variables)
+- requests (HTTP library)
+
+
+STEP 2: Install ODBC Driver (For SQL Server)
+--------------------------------------------
+
+Download and install "ODBC Driver 17 for SQL Server":
+https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server
+
+Choose the version matching your Windows (x86 or x64)
+
+This driver allows Python to connect to SQL Server database.
+
+
+STEP 3: Configure Database Connection
+-------------------------------------
+
+Edit the file: codelens/settings.py (around line 70)
+
+Find the DATABASES section and update it:
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'sql_server.pyodbc',
+        'NAME': 'CodeLensDB',              # Database name
+        'USER': 'sa',                       # Your SQL Server username
+        'PASSWORD': 'YourPassword123',      # Your SQL Server password
+        'HOST': '127.0.0.1',                # Server address
+        'PORT': 1433,                       # Default SQL Server port
+        'OPTIONS': {
+            'driver': 'ODBC Driver 17 for SQL Server',
+        },
+    }
+}
+
+Replace:
+- USER: Your SQL Server login username (usually 'sa')
+- PASSWORD: Your SQL Server password
+- HOST: Your server address (localhost for local)
+
+
+ALTERNATIVE: Use SQLite (For Testing)
+=====================================
+
+If you don't have SQL Server, use SQLite:
+
+Uncomment this section in settings.py (around line 80):
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+SQLite creates a local file database (no server needed).
+
+
+STEP 4: Create Database in SQL Server
+-------------------------------------
+
+1. Open SQL Server Management Studio
+2. Right-click "Databases" → New Database
+3. Name: CodeLensDB
+4. Click OK
+
+The Django migrations will create the tables automatically.
+
+
+STEP 5: Run Django Migrations
+-----------------------------
+
+In Command Prompt (with venv activated):
+
+python manage.py migrate
+
+This creates all necessary database tables for:
+- Users
+- User Profiles
+- Code Analysis Records
+- Analysis History
+
+
+STEP 6: Create Admin User
+------------------------
+
+python manage.py createsuperuser
+
+Enter:
+- Username: admin
+- Email: admin@localhost.com
+- Password: (choose a strong password)
+- Repeat Password: (confirm)
+
+
+STEP 7: Collect Static Files
+----------------------------
+
+python manage.py collectstatic --noinput
+
+This gathers all CSS and JavaScript files in the correct location.
+
+
+STEP 8: Start the Development Server
+-----------------------------------
+
+python manage.py runserver
+
+You should see:
+Starting development server at http://127.0.0.1:8000/
+
+The server is now running!
+
+
+🌐 ACCESSING THE APPLICATION
+═══════════════════════════════════════════════════════════════════════════════
+
+Open your web browser and visit:
+
+Home Page:         http://localhost:8000/
+Login:             http://localhost:8000/login/
+Signup:            http://localhost:8000/signup/
+Admin Panel:       http://localhost:8000/admin/
+
+Login to admin with credentials you created in Step 6.
+
+
+✨ FEATURES & HOW TO USE
+═══════════════════════════════════════════════════════════════════════════════
+
+1. SIGN UP (First Time)
+   - Visit: http://localhost:8000/signup/
+   - Enter email, username (optional), password
+   - Click "Create Account"
+   - You're automatically logged in
+
+2. LOGIN (After Signup)
+   - Visit: http://localhost:8000/login/
+   - Enter your email and password
+   - Click "Login"
+
+3. CODE ANALYSIS (Main Feature)
+   - Go to: http://localhost:8000/ (Home page)
+   - Paste Python code in the editor OR click "Upload File" for .py files
+   - Click "✨ Analyze Code"
+   - Wait for analysis...
+   - Results show in tabs:
+     * 🐞 Error Detection - Syntax errors found
+     * 🧱 OOP Concepts - Classes, inheritance detected
+     * ✨ Code Smells - Code quality issues
+
+4. ANALYSIS HISTORY
+   - Click "🕒 Analysis History" in navbar
+   - See all your previous analyses
+   - Search by name or tags
+   - Click ⭐ to star important analyses
+   - Click "View Results" to see full details
+   - Click "Delete" to remove from history
+   - Paginated (10 per page)
+
+5. LOGOUT
+   - Click your username → "Logout" in navbar
+   - You're logged out and redirected to home
+
+
+📂 PROJECT STRUCTURE
+═══════════════════════════════════════════════════════════════════════════════
+
+django_project/
+│
+├── codelens/                           # Main Django project
+│   │
+│   ├── settings.py                     # Database & app configuration
+│   ├── urls.py                         # Main URL routes
+│   ├── wsgi.py                         # WSGI application (for deployment)
+│   │
+│   ├── templates/                      # HTML pages (Django templates)
+│   │   ├── HomePage.html               # Main analysis page
+│   │   ├── login.html                  # Login form
+│   │   ├── signup.html                 # Signup form
+│   │   ├── functionalities.html        # Analysis results (tabbed)
+│   │   └── history.html                # Analysis history page
+│   │
+│   ├── static/                         # CSS & JavaScript (static files)
+│   │   ├── css/
+│   │   │   ├── HomePage.css
+│   │   │   ├── loginsingnup.css
+│   │   │   ├── functionalities.css
+│   │   │   └── history.css
+│   │   └── js/
+│   │       ├── main.js                 # Home page interactivity
+│   │       ├── functionalities.js      # Tab switching for results
+│   │       └── history.js              # History page interactions
+│   │
+│   └── analyzer/                       # Django app (application logic)
+│       ├── models.py                   # Database models (tables)
+│       ├── views.py                    # View functions (business logic)
+│       ├── urls.py                     # App-specific URL routes
+│       ├── admin.py                    # Django admin configuration
+│       ├── apps.py                     # App configuration
+│       └── migrations/                 # Database schema changes
+│
+├── manage.py                           # Django command-line tool
+├── requirements.txt                    # Python dependencies
+├── README.md                           # Project documentation
+├── CONFIG.txt                          # Configuration reference
+├── SETUP_GUIDE.txt                     # Detailed setup guide
+├── quickstart.bat                      # Quick startup script (Windows)
+├── quickstart.sh                       # Quick startup script (Linux/Mac)
+└── .gitignore                          # Git ignore file
+
+
+🗄️ DATABASE STRUCTURE
+═══════════════════════════════════════════════════════════════════════════════
+
+The application uses these database tables:
+
+1. auth_user (Django built-in)
+   - Stores user login credentials
+   - Fields: id, username, email, password, is_active, etc.
+
+2. analyzer_userprofile
+   - Extended user information
+   - Fields: user_id, total_analyses, created_at, updated_at
+
+3. analyzer_codeanalysis
+   - Stores code analysis records
+   - Fields: user_id, code_input, errors_detected, oop_concepts,
+             code_smells, refactoring_suggestions, status, etc.
+
+4. analyzer_analysishistory
+   - Tracks analysis history with metadata
+   - Fields: user_id, analysis_id, title, tags, is_starred,
+             is_deleted, created_at, viewed_at
+
+All tables are automatically created by Django migrations.
+
+
+🔌 URL ROUTES & ENDPOINTS
+═══════════════════════════════════════════════════════════════════════════════
+
+Public Pages:
+GET  /                    → Home page
+GET  /login/              → Login form
+POST /login/              → Process login
+GET  /signup/             → Signup form
+POST /signup/             → Process signup
+
+Protected Pages (Requires Login):
+GET  /logout/             → Logout user
+GET  /history/            → Analysis history
+GET  /functionalities/    → View analysis results
+
+API Endpoints (JSON responses):
+POST /analyze/            → Submit code for analysis
+GET  /api/analysis/<id>/  → Get analysis details
+POST /api/analysis/<id>/star/         → Star/unstar analysis
+POST /api/history/<id>/delete/        → Delete history entry
+
+
+💾 DATABASE QUERIES (Behind the Scenes)
+═══════════════════════════════════════════════════════════════════════════════
+
+When you analyze code:
+1. Django saves your code to analyzer_codeanalysis table
+2. Performs AST analysis
+3. Saves errors, OOP concepts, code smells
+4. Creates entry in analyzer_analysishistory
+5. Updates user_profile with total_analyses count
+
+When you view history:
+1. Django queries analyzer_analysishistory for your user_id
+2. Joins with analyzer_codeanalysis for full data
+3. Returns paginated results (10 per page)
+
+When you search:
+1. Django filters history by title or tags
+2. Returns matching analyses
+
+
+📊 INTERACTIVE FEATURES
+═══════════════════════════════════════════════════════════════════════════════
+
+All interactions work without page reload (AJAX):
+
+1. Home Page
+   - Upload button: Opens file chooser for .py files
+   - Analyze button: Submits code via AJAX
+   - Real-time loading spinner while analyzing
+   - Error messages if code is invalid
+
+2. Registration
+   - Email validation
+   - Password strength checking
+   - Duplicate email prevention
+   - Auto-login after signup
+
+3. Analysis Results
+   - Tab switching (click tabs to switch views)
+   - Smooth animations between tabs
+   - Code comparison (original vs fixed)
+   - Color-coded error/fix sections
+
+4. History Page
+   - Search in real-time
+   - Star toggle for favorites
+   - Delete confirmation dialog
+   - Pagination navigation
+   - Smooth animations on delete
+
+5. Dynamic Navigation
+   - Navbar changes based on login status
+   - "Logout (username)" when logged in
+   - Links highlight on hover
+   - Responsive mobile menu
+
+
+🔐 SECURITY FEATURES
+═══════════════════════════════════════════════════════════════════════════════
+
+- CSRF Protection: All forms protected with {% csrf_token %}
+- SQL Injection Prevention: Django ORM prevents SQL injection
+- Password Hashing: Django's built-in password hashing
+- Session Management: Secure session storage in database
+- User Data Isolation: Each user sees only their own data
+- Login Required: @login_required decorator on protected views
+- Error Handling: Graceful error messages without exposing system info
+
+
+🚀 QUICK START (Fast Method)
+═══════════════════════════════════════════════════════════════════════════════
+
+For Windows users, there's a batch script:
+
+1. Navigate to project: 
+   cd c:\Users\butta\OneDrive\Desktop\new bpee\django_project\
+
+2. Run the script:
+   quickstart.bat
+
+This does everything automatically:
+- Creates virtual environment
+- Installs dependencies
+- Runs migrations
+- Collects static files
+- Starts the server
+
+OR for Linux/Mac:
+bash quickstart.sh
+
+
+⚙️ COMMON COMMANDS (While Server is Running)
+═══════════════════════════════════════════════════════════════════════════════
+
+Press Ctrl+C to stop the server.
+
+Restart server:
+python manage.py runserver
+
+Create new app (if needed):
+python manage.py startapp app_name
+
+Make migrations after model changes:
+python manage.py makemigrations
+
+Apply pending migrations:
+python manage.py migrate
+
+Access Django shell:
+python manage.py shell
+
+Run tests (if added):
+python manage.py test
+
+
+🐛 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+PROBLEM: "ModuleNotFoundError: No module named 'sql_server'"
+SOLUTION: pip install django-pyodbc-azure
+
+PROBLEM: "ODBC Driver not found"
+SOLUTION: Install ODBC Driver 17 for SQL Server from Microsoft
+
+PROBLEM: "Database CodeLensDB does not exist"
+SOLUTION: Create it in SQL Server Management Studio first
+
+PROBLEM: "Login always fails"
+SOLUTION: 
+- Check database is connected: python manage.py shell
+- Verify user exists: User.objects.all()
+- Create superuser: python manage.py createsuperuser
+
+PROBLEM: "Static files (CSS/JS) not loading"
+SOLUTION: python manage.py collectstatic --noinput
+
+PROBLEM: "Connection refused at 127.0.0.1:1433"
+SOLUTION: 
+- Verify SQL Server is running
+- Check HOST and PORT in settings.py
+- Try: telnet localhost 1433
+
+PROBLEM: "No such table: analyzer_codeanalysis"
+SOLUTION: Run migrations: python manage.py migrate
+
+
+📖 ADDITIONAL DOCUMENTATION
+═══════════════════════════════════════════════════════════════════════════════
+
+For more details, see:
+- README.md - Project overview
+- SETUP_GUIDE.txt - Complete setup instructions
+- CONFIG.txt - Configuration reference
+- codelens/settings.py - Django configuration
+
+
+🎓 LEARNING RESOURCES
+═══════════════════════════════════════════════════════════════════════════════
+
+Django:
+https://docs.djangoproject.com/
+
+Python:
+https://docs.python.org/
+
+SQL Server:
+https://learn.microsoft.com/en-us/sql/
+
+ODBC:
+https://learn.microsoft.com/en-us/sql/connect/odbc/
+
+
+✅ VERIFICATION CHECKLIST
+═══════════════════════════════════════════════════════════════════════════════
+
+Before deploying to production, verify:
+
+□ Dependencies installed: pip freeze | grep -E "Django|pyodbc"
+□ Database connected: python manage.py shell
+□ Migrations applied: python manage.py migrate
+□ Superuser created: python manage.py createsuperuser
+□ Static files collected: ls codelens/staticfiles/
+□ Server starts: python manage.py runserver
+□ Can signup at: http://localhost:8000/signup/
+□ Can login at: http://localhost:8000/login/
+□ Can analyze code: http://localhost:8000/
+□ History works: http://localhost:8000/history/ (after login)
+□ Admin works: http://localhost:8000/admin/ (with superuser)
+
+
+🎯 NEXT STEPS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. ✓ Install dependencies
+2. ✓ Configure SQL Server (settings.py)
+3. ✓ Create database
+4. ✓ Run migrations
+5. ✓ Create superuser
+6. ✓ Start server
+7. → Test signup/login
+8. → Test code analysis
+9. → Test history
+10. → Deploy to production (when ready)
+
+
+💡 PRODUCTION DEPLOYMENT TIPS
+═══════════════════════════════════════════════════════════════════════════════
+
+When deploying to production:
+
+1. Change SECRET_KEY in settings.py to a unique value
+2. Set DEBUG = False
+3. Configure ALLOWED_HOSTS with your domain
+4. Use environment variables for passwords
+5. Set up Gunicorn/uWSGI for application server
+6. Use Nginx/Apache for reverse proxy
+7. Enable HTTPS/SSL
+8. Set up logging
+9. Use production-grade database
+10. Regular backups
+11. Monitor application performance
+12. Update dependencies regularly
+
+
+📞 SUPPORT
+═══════════════════════════════════════════════════════════════════════════════
+
+If you encounter issues:
+
+1. Check error messages in Command Prompt
+2. Review the specific document for that feature
+3. Verify all dependencies are installed
+4. Ensure SQL Server is running
+5. Check database credentials in settings.py
+6. Read Django documentation
+7. Check logs in Django shell
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                              YOU'RE ALL SET! 🎉
+                     Your CodeLens application is ready to use.
+═══════════════════════════════════════════════════════════════════════════════
+
+Start the server with: python manage.py runserver
+Visit: http://localhost:8000/
+
+Happy coding! 🚀

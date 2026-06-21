@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Usage Limits — CodeLens{% endblock %}
+{% block body_class %}layout-app{% endblock %}
+
+{% block topbar_heading %}Usage Limits{% endblock %}
+{% block topbar_subtitle %}<p>Monitor daily analysis consumption, remaining tokens, and active quotas</p>{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Premium Usage Layout ── */
+.cl-usage-container {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding-bottom: 3rem;
+}
+
+/* ── Glassmorphic Dashboard Cards ── */
+.cl-usage-card {
+    background: var(--cl-surface);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    box-shadow: var(--cl-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.cl-usage-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--cl-gradient);
+    opacity: 0.8;
+}
+
+.cl-usage-card h3 {
+    font-family: var(--cl-font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--cl-text);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    border-bottom: 1px solid var(--cl-border);
+    padding-bottom: 0.85rem;
+    margin: 0;
+}
+
+.cl-usage-card h3 i {
+    color: var(--cl-primary);
+}
+
+/* ── Circular Progress / Meter Layout ── */
+.cl-meter-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 2.5rem;
+    align-items: center;
+}
+@media (max-width: 768px) {
+    .cl-meter-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 1.5rem;
+    }
+}
+
+/* ── Visual Circle Gauge ── */
+.cl-circle-gauge {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.cl-circle-gauge svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+.cl-circle-bg {
+    fill: none;
+    stroke: var(--cl-border);
+    stroke-width: 14px;
+}
+.cl-circle-fill {
+    fill: none;
+    stroke: var(--cl-primary);
+    stroke-width: 14px;
+    stroke-linecap: round;
+    stroke-dasharray: 628;
+    stroke-dashoffset: calc(628 - (628 * {{ percent_today }}) / 100);
+    transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cl-circle-value {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+.cl-circle-value__number {
+    font-family: var(--cl-font-display);
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--cl-text);
+    line-height: 1.1;
+}
+.cl-circle-value__label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--cl-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.2rem;
+}
+
+/* ── Progress Indicators ── */
+.cl-progress-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+.cl-quota-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+.cl-quota-bar {
+    height: 12px;
+    background: var(--cl-border);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+.cl-quota-fill {
+    height: 100%;
+    background: var(--cl-gradient);
+    border-radius: 6px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cl-quota-meta {
+    font-size: 0.88rem;
+    color: var(--cl-text-muted);
+    line-height: 1.5;
+}
+
+/* ── Quota Plan Tier Badge ── */
+.cl-tier-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(124, 58, 237, 0.03);
+    border: 1px dashed var(--cl-primary);
+    border-radius: var(--cl-radius-sm);
+    padding: 1rem 1.5rem;
+}
+@media (max-width: 576px) {
+    .cl-tier-card {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+.cl-tier-card__left h4 {
+    margin: 0 0 0.25rem 0;
+    font-family: var(--cl-font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+.cl-tier-card__left p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--cl-text-muted);
+}
+.cl-tier-badge {
+    background: var(--cl-gradient);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.35rem 0.8rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 2px 8px rgba(124,58,237,0.3);
+}
+
+/* ── Optimization Tips ── */
+.cl-tips-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+@media (max-width: 768px) {
+    .cl-tips-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.cl-tip-box {
+    background: var(--cl-bg-muted);
+    border: 1px solid var(--cl-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    gap: 0.85rem;
+    transition: all 0.2s ease;
+}
+.cl-tip-box:hover {
+    border-color: var(--cl-primary);
+    transform: translateY(-2px);
+}
+.cl-tip-box i {
+    color: var(--cl-primary);
+    font-size: 1.2rem;
+    margin-top: 0.15rem;
+}
+.cl-tip-box__content h4 {
+    margin: 0 0 0.35rem 0;
+    font-family: var(--cl-font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+.cl-tip-box__content p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--cl-text-muted);
+    line-height: 1.4;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cl-usage-container" data-reveal>
+    
+    <!-- ── Quota status meter ── -->
+    <article class="cl-usage-card">
+        <h3><i class="fa-solid fa-gauge-high"></i> Active usage quotas</h3>
+        
+        <div class="cl-meter-grid">
+            <!-- Circular Gauge -->
+            <div class="cl-circle-gauge">
+                <svg>
+                    <circle class="cl-circle-bg" cx="110" cy="110" r="100"></circle>
+                    <circle class="cl-circle-fill" cx="110" cy="110" r="100"></circle>
+                </svg>
+                <div class="cl-circle-value">
+                    <span class="cl-circle-value__number">{{ used_today }}</span>
+                    <span class="cl-circle-value__label">Analyses</span>
+                </div>
+            </div>
+
+            <!-- Detailed stats & linear fill -->
+            <div class="cl-progress-info">
+                <div class="cl-quota-header">
+                    <span>Daily Analyses Used</span>
+                    <strong style="color:var(--cl-primary)">{{ used_today }} / {{ limit_today }} used</strong>
+                </div>
+                <div class="cl-quota-bar">
+                    <div class="cl-quota-fill" style="width: {{ percent_today }}%"></div>
+                </div>
+                <p class="cl-quota-meta">
+                    <i class="fa-solid fa-circle-info" style="color:var(--cl-primary); margin-right:0.25rem"></i>
+                    You have analyzed <strong>{{ used_today }}</strong> codebases out of your daily allowance of <strong>{{ limit_today }}</strong>.
+                </p>
+                
+                <div class="cl-tier-card">
+                    <div class="cl-tier-card__left">
+                        <h4>Active Plan Level</h4>
+                        <p>Limits reset on a rolling <strong>24-hour window</strong> after each scan.</p>
+                    </div>
+                    <span class="cl-tier-badge">{{ profile.plan_type }} plan</span>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <!-- Quota optimization advice -->
+    <article class="cl-usage-card">
+        <h3><i class="fa-solid fa-lightbulb"></i> Quota optimization guidelines</h3>
+        <p style="color:var(--cl-text-muted); font-size:0.9rem; margin:-0.5rem 0 0.5rem">Maximize your developer velocity within daily quota allowances using these industry best practices.</p>
+        
+        <div class="cl-tips-grid">
+            <div class="cl-tip-box">
+                <i class="fa-solid fa-code-merge"></i>
+                <div class="cl-tip-box__content">
+                    <h4>Focus on Modular Functions</h4>
+                    <p>Instead of submitting massive scripts, analyze specific functions or classes to optimize response speed and make precise fixes.</p>
+                </div>
+            </div>
+            
+            <div class="cl-tip-box">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <div class="cl-tip-box__content">
+                    <h4>Check History Before Re-runs</h4>
+                    <p>Your previous analyses are cached and available for review in the History tab, saving your daily usage quotas from duplicates.</p>
+                </div>
+            </div>
+
+            <div class="cl-tip-box">
+                <i class="fa-solid fa-microchip"></i>
+                <div class="cl-tip-box__content">
+                    <h4>Enable Pre-validation</h4>
+                    <p>Clean up compile/syntax errors locally before running semantic smells analysis to get higher-quality feedback from Qwen Coder.</p>
+                </div>
+            </div>
+
+            <div class="cl-tip-box">
+                <i class="fa-solid fa-rocket"></i>
+                <div class="cl-tip-box__content">
+                    <h4>Upgrade to Ultra for Scale</h4>
+                    <p>Unlock unlimited analyses, priority pipeline queues, and deep code-smells engine processing instantly under our Ultra package.</p>
+                </div>
+            </div>
+        </div>
+    </article>
+
+</div>
+{% endblock %}

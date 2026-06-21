@@ -1,0 +1,615 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}CodeLens — AI Python Analysis{% endblock %}
+{% block body_class %}layout-app{% endblock %}
+
+{% block extra_head %}
+<style>
+/* Extended landing page sections */
+.cl-landing-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cl-border), transparent);
+    margin: 4rem 0;
+}
+.cl-landing-section-head {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto 3rem;
+}
+.cl-landing-section-head h2 {
+    font-family: var(--cl-font-display);
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+    background: var(--cl-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.cl-landing-section-head p {
+    color: var(--cl-text-muted);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Workflow Steps */
+.cl-workflow-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+.cl-workflow-step {
+    padding: 2.5rem 1.5rem;
+    background: var(--cl-surface);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius);
+    text-align: center;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.cl-workflow-step:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--cl-shadow-lg);
+    border-color: var(--cl-primary);
+}
+.cl-workflow-number {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--cl-gradient);
+    color: #fff;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    font-size: 1.1rem;
+}
+.cl-workflow-step h3 {
+    font-family: var(--cl-font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 1rem 0 0.5rem;
+    color: var(--cl-text);
+}
+.cl-workflow-step p {
+    font-size: 0.88rem;
+    color: var(--cl-text-subtle);
+    line-height: 1.5;
+}
+
+/* Stats Section */
+.cl-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+.cl-stat-card {
+    padding: 2.5rem 1.5rem;
+    background: var(--cl-surface);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius);
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+.cl-stat-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--cl-primary);
+}
+.cl-stat-num {
+    font-family: var(--cl-font-display);
+    font-size: 2.5rem;
+    font-weight: 900;
+    background: var(--cl-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+.cl-stat-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--cl-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+@media (max-width: 768px) {
+    .cl-workflow-grid, .cl-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+}
+
+/* Code Comparison Showcase */
+.cl-comparison-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+@media (max-width: 900px) {
+    .cl-comparison-wrapper {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+.cl-comp-box {
+    background: #0f172a;
+    border-radius: var(--cl-radius);
+    border: 1px solid var(--cl-border);
+    overflow: hidden;
+    box-shadow: var(--cl-shadow-lg);
+    display: flex;
+    flex-direction: column;
+}
+.cl-comp-box__header {
+    padding: 0.85rem 1.25rem;
+    background: rgba(15, 23, 42, 0.6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.cl-comp-box__title {
+    font-family: var(--cl-font);
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.cl-comp-box--bad .cl-comp-box__title { color: #f87171; }
+.cl-comp-box--good .cl-comp-box__title { color: #4ade80; }
+
+.cl-comp-box__badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+}
+.cl-comp-box--bad .cl-comp-box__badge { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
+.cl-comp-box--good .cl-comp-box__badge { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.25); }
+
+.cl-comp-box pre {
+    margin: 0;
+    padding: 1.25rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: #cbd5e1;
+    overflow-x: auto;
+    background: #0b0f19;
+}
+.cl-comp-box pre span.smell { background: rgba(239, 68, 68, 0.18); border-bottom: 1.5px dashed #f87171; padding: 0 2px; border-radius: 2px; }
+.cl-comp-box pre span.clean { background: rgba(34, 197, 94, 0.15); border-bottom: 1.5px solid #4ade80; padding: 0 2px; border-radius: 2px; }
+
+/* Testimonials Layout */
+.cl-testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+@media (max-width: 900px) {
+    .cl-testimonials-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.cl-testimonial-card {
+    padding: 2rem 1.5rem;
+    background: var(--cl-surface);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius);
+    box-shadow: var(--cl-shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: transform 0.3s ease;
+}
+.cl-testimonial-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--cl-primary);
+}
+.cl-test-stars {
+    color: #f59e0b;
+    font-size: 0.85rem;
+    display: flex;
+    gap: 2px;
+}
+.cl-test-quote {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--cl-text-subtle);
+    font-style: italic;
+    margin: 0;
+}
+.cl-test-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: auto;
+}
+.cl-test-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--cl-gradient);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(124, 58, 237, 0.2);
+}
+.cl-test-name {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--cl-text);
+}
+.cl-test-role {
+    font-size: 0.75rem;
+    color: var(--cl-text-muted);
+}
+
+/* FAQ Accordion Styling */
+.cl-faq-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+.cl-faq-item {
+    background: var(--cl-surface);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius-sm);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+.cl-faq-item[open] {
+    border-color: var(--cl-primary);
+    box-shadow: var(--cl-shadow);
+}
+.cl-faq-item summary {
+    padding: 1.25rem 1.5rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--cl-text);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    outline: none;
+    user-select: none;
+}
+.cl-faq-item summary::-webkit-details-marker {
+    display: none;
+}
+.cl-faq-item summary::after {
+    content: '\f078';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 0.8rem;
+    color: var(--cl-text-muted);
+    transition: transform 0.3s ease;
+}
+.cl-faq-item[open] summary::after {
+    transform: rotate(180deg);
+    color: var(--cl-primary);
+}
+.cl-faq-content {
+    padding: 0 1.5rem 1.25rem;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--cl-text-subtle);
+    border-top: 1px solid transparent;
+}
+.cl-faq-item[open] .cl-faq-content {
+    border-top: 1px solid var(--cl-border);
+    padding-top: 1rem;
+}
+
+/* Bottom Premium CTA Banner */
+.cl-bottom-cta {
+    position: relative;
+    padding: 4.5rem 2.5rem;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(236, 72, 153, 0.05) 100%);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius);
+    text-align: center;
+    overflow: hidden;
+    box-shadow: var(--cl-shadow-lg);
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+.cl-bottom-cta::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, transparent 70%);
+    filter: blur(40px);
+    pointer-events: none;
+}
+.cl-bottom-cta h2 {
+    font-family: var(--cl-font-display);
+    font-size: 2.2rem;
+    font-weight: 800;
+    background: var(--cl-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1rem;
+}
+.cl-bottom-cta p {
+    color: var(--cl-text-subtle);
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+}
+.cl-bottom-cta .cl-btn {
+    padding: 0.9rem 2.2rem;
+    font-size: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cl-landing-main">
+        <section class="cl-hero">
+            <div class="cl-hero__copy" data-reveal>
+                <span class="cl-hero__eyebrow"><i class="fa-solid fa-bolt"></i> Next-gen code intelligence</span>
+                <h1 class="cl-hero__title">Write cleaner Python with <span>AI precision</span></h1>
+                <p class="cl-hero__desc">Instant syntax analysis, OOP insights, smell detection, and refactoring—built for both developers and students who care about clean code.</p>
+                <div class="cl-hero__cta">
+                    <a href="{% url 'analyzer' %}" class="cl-btn cl-btn--primary">Start analyzing <i class="fa-solid fa-arrow-right"></i></a>
+                    <a href="#features" class="cl-btn cl-btn--ghost">See features</a>
+                </div>
+            </div>
+            <div class="cl-hero__visual" data-reveal data-delay="2">
+                <div class="cl-hero__mock">
+                    <div class="cl-hero__mock-bar"><span></span><span></span><span></span></div>
+                    <pre>def analyze(data):
+    return ai.review(data)</pre>
+                </div>
+                <div class="cl-hero__stat-float cl-hero__stat-float--1">98% accuracy</div>
+                <div class="cl-hero__stat-float cl-hero__stat-float--2"><i class="fa-solid fa-check"></i> No errors</div>
+            </div>
+        </section>
+
+        <div class="cl-landing-divider"></div>
+
+        <!-- Code Comparison Showcase -->
+        <section class="cl-landing-comparison" data-reveal>
+            <div class="cl-landing-section-head">
+                <h2>Before & After with CodeLens</h2>
+                <p>Witness how messy, procedural spaghetti Python code is transformed into clean, maintainable, object-oriented software.</p>
+            </div>
+            <div class="cl-comparison-wrapper">
+                <article class="cl-comp-box cl-comp-box--bad">
+                    <div class="cl-comp-box__header">
+                        <span class="cl-comp-box__title"><i class="fa-solid fa-triangle-exclamation"></i> Procedural & Unoptimized</span>
+                        <span class="cl-comp-box__badge">Smelly Code</span>
+                    </div>
+                    <pre><code><span class="smell"># Unoptimized procedural spaghetti</span>
+def proc_loop(arr):
+    out = []
+    # God function with code smells
+    for i in range(len(arr)):
+        val = arr[i]
+        if val > 10:
+            # Magic number constant
+            new_val = val * 1.085
+            out.append(new_val)
+    return out</code></pre>
+                </article>
+                <article class="cl-comp-box cl-comp-box--good">
+                    <div class="cl-comp-box__header">
+                        <span class="cl-comp-box__title"><i class="fa-solid fa-circle-check"></i> Refactored SOLID OOP</span>
+                        <span class="cl-comp-box__badge">CodeLens Optimized</span>
+                    </div>
+                    <pre><code><span class="clean">class PremiumTaxCalculator:</span>
+    """Elegant SOLID architecture with clean principles."""
+    TAX_RATE = 1.085  # Documented constant config
+    THRESHOLD = 10    # Named threshold smells eliminated
+
+    def filter_and_calculate(self, values: list[float]) -> list[float]:
+        <span class="clean">return [v * self.TAX_RATE for v in values if v > self.THRESHOLD]</span></code></pre>
+                </article>
+            </div>
+        </section>
+
+        <div class="cl-landing-divider"></div>
+
+        <!-- How It Works Section -->
+        <section class="cl-landing-workflow" data-reveal>
+            <div class="cl-landing-section-head">
+                <h2>How CodeLens Works</h2>
+                <p>Write and learn cleaner, more robust code in three simple steps</p>
+            </div>
+            <div class="cl-workflow-grid">
+                <div class="cl-workflow-step" data-reveal data-delay="1">
+                    <span class="cl-workflow-number">1</span>
+                    <h3>Paste Code</h3>
+                    <p>Paste raw Python code scripts, class assignments, or feed a public GitHub repository link directly to the analyzer.</p>
+                </div>
+                <div class="cl-workflow-step" data-reveal data-delay="2">
+                    <span class="cl-workflow-number">2</span>
+                    <h3>AST Engine Scan</h3>
+                    <p>Our deterministic AST analysis maps object relationships, inspects syntax, and identifies deep smells.</p>
+                </div>
+                <div class="cl-workflow-step" data-reveal data-delay="3">
+                    <span class="cl-workflow-number">3</span>
+                    <h3>Instant Refactoring</h3>
+                    <p>Receive optimized refactoring suggestions, complexity breakdowns, and pedagogical comments in real-time.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="cl-landing-divider"></div>
+
+        <!-- Bento Features Grid -->
+        <section id="features" class="cl-bento">
+            <article class="cl-card cl-card--hover cl-bento__item" data-reveal>
+                <div class="cl-bento__icon cl-bento__icon--rose">🐞</div>
+                <h3>Error Detection</h3>
+                <p>Pinpoint syntax failures with line numbers and interactive AI tutor explanations—perfect for learning.</p>
+            </article>
+            <article class="cl-card cl-card--hover cl-bento__item" data-reveal data-delay="1">
+                <div class="cl-bento__icon cl-bento__icon--cyan">🧊</div>
+                <h3>OOP Analysis</h3>
+                <p>Map class hierarchies, inheritance, and design patterns. Master core computer science structures.</p>
+            </article>
+            <article class="cl-card cl-card--hover cl-bento__item" data-reveal data-delay="2">
+                <div class="cl-bento__icon cl-bento__icon--violet">✨</div>
+                <h3>AI Refactoring</h3>
+                <p>Receive optimized code recommendations and learn the standard software engineering principles behind each change.</p>
+            </article>
+            <article class="cl-card cl-card--hover cl-bento__item" data-reveal data-delay="3">
+                <div class="cl-bento__icon cl-bento__icon--rose" style="filter: hue-rotate(90deg);">⚡</div>
+                <h3>Performance Loops</h3>
+                <p>Find heavy runtime loops, duplicate logic, and unoptimized algorithms to accelerate execution speed.</p>
+            </article>
+            <article class="cl-card cl-card--hover cl-bento__item" data-reveal data-delay="4">
+                <div class="cl-bento__icon cl-bento__icon--rose" style="filter: hue-rotate(270deg);">🛡️</div>
+                <h3>Secure Quotas</h3>
+                <p>Reliable token usage tracking with special discounted plans designed for students.</p>
+            </article>
+        </section>
+
+        <div class="cl-landing-divider"></div>
+
+        <!-- Loved by Developers -->
+        <section class="cl-landing-testimonials" data-reveal>
+            <div class="cl-landing-section-head">
+                <h2>Loved by Developers & Students</h2>
+                <p>Engineers, computer science students, and educators rely on CodeLens to refine structures, accelerate learning, and write clean software.</p>
+            </div>
+            <div class="cl-testimonials-grid">
+                <div class="cl-testimonial-card" data-reveal data-delay="1">
+                    <div class="cl-test-stars">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="cl-test-quote">"CodeLens has completely changed how our team conducts Python code reviews. The OOP architecture analysis is incredibly precise and caught several major structural anti-patterns before production."</p>
+                    <div class="cl-test-profile">
+                        <span class="cl-test-avatar">SJ</span>
+                        <div>
+                            <div class="cl-test-name">Sarah Jenkins</div>
+                            <div class="cl-test-role">Lead Backend Engineer</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cl-testimonial-card" data-reveal data-delay="2">
+                    <div class="cl-test-stars">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="cl-test-quote">"As a computer science student, understanding object-oriented design and SOLID principles was a struggle. CodeLens acts like a personal tutor, helping me clean up lab assignments and master concepts."</p>
+                    <div class="cl-test-profile">
+                        <span class="cl-test-avatar">AM</span>
+                        <div>
+                            <div class="cl-test-name">Alex Miller</div>
+                            <div class="cl-test-role">CS Student & Learner</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cl-testimonial-card" data-reveal data-delay="3">
+                    <div class="cl-test-stars">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="cl-test-quote">"The custom UI, interactive charts, and history tracking make debugging incredibly smooth. The AI surgeon explains SOLID rules in a way that makes it perfect for both senior engineering and coursework."</p>
+                    <div class="cl-test-profile">
+                        <span class="cl-test-avatar">HL</span>
+                        <div>
+                            <div class="cl-test-name">Harish Logan</div>
+                            <div class="cl-test-role">Full-Stack Dev & Student Mentor</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="cl-landing-divider"></div>
+
+        <!-- Project Reach & Stats Section -->
+        <section class="cl-landing-stats" data-reveal>
+            <div class="cl-landing-section-head">
+                <h2>Engine Statistics</h2>
+                <p>Powering academic learning and clean development pipelines with state-of-the-art heuristics</p>
+            </div>
+            <div class="cl-stats-grid">
+                <div class="cl-stat-card" data-reveal data-delay="1">
+                    <div class="cl-stat-num">30+</div>
+                    <div class="cl-stat-label">Code Heuristics</div>
+                </div>
+                <div class="cl-stat-card" data-reveal data-delay="2">
+                    <div class="cl-stat-num">15k+</div>
+                    <div class="cl-stat-label">Python Files Reviewed</div>
+                </div>
+                <div class="cl-stat-card" data-reveal data-delay="3">
+                    <div class="cl-stat-num">99.9%</div>
+                    <div class="cl-stat-label">System Reliability</div>
+                </div>
+        </section>
+
+        <div class="cl-landing-divider"></div>
+
+        <!-- Frequently Asked Questions -->
+        <section class="cl-landing-faq" data-reveal>
+            <div class="cl-landing-section-head">
+                <h2>Frequently Asked Questions</h2>
+                <p>Have questions about CodeLens? Here are answers to the most common queries from developers and students.</p>
+            </div>
+            <div class="cl-faq-accordion">
+                <details class="cl-faq-item">
+                    <summary>How does CodeLens analyze my Python code?</summary>
+                    <div class="cl-faq-content">
+                        CodeLens utilizes a hybrid engine. First, our parser compiles your code into an Abstract Syntax Tree (AST) to verify structural correctness. Second, custom heuristic rules analyze complexity and OOP hierarchies. Finally, our LLM Surgeon refactors the code, explaining it clearly to help both professional developers and students master best practices.
+                    </div>
+                </details>
+                <details class="cl-faq-item">
+                    <summary>Is my submitted code kept confidential and secure?</summary>
+                    <div class="cl-faq-content">
+                        Absolutely. We take privacy extremely seriously. Your raw code blocks are analyzed on-the-fly and are never persisted to long-term storage unless you choose to save them to your analysis history. You also retain full capability to permanently delete any history record instantly from your dashboard.
+                    </div>
+                </details>
+                <details class="cl-faq-item">
+                    <summary>What benefits do I get with the Pro plan?</summary>
+                    <div class="cl-faq-content">
+                        Free tier users get fully detailed syntax checking, basic smell identification, and daily credits. Upgrading to the Pro plan unlocks unlimited daily credits, priority queues, and premium refactoring tips powered by Qwen2.5-Coder. We offer an exclusive 50% discount for students with a verified .edu email address!
+                    </div>
+                </details>
+                <details class="cl-faq-item">
+                    <summary>Can I import files directly from public GitHub repos?</summary>
+                    <div class="cl-faq-content">
+                        Yes! In the CodeLens Analyzer, you can paste public GitHub or Gist URLs directly, and our fetch system will pull down and inspect the file immediately, saving you the hassle of manual copy-pasting.
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <div class="cl-landing-divider"></div>
+
+        <!-- Premium Bottom Call-to-Action -->
+        <section class="cl-bottom-cta-section" data-reveal>
+            <div class="cl-bottom-cta">
+                <h2>Master and optimize Python today</h2>
+                <p>Join thousands of developers and students scanning, refactoring, and mastering their code with CodeLens AI precision.</p>
+                <a href="{% url 'analyzer' %}" class="cl-btn cl-btn--primary">Start analyzing for free <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        </section>
+</div>
+{% endblock %}

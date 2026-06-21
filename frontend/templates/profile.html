@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile — CodeLens{% endblock %}
+{% block body_class %}layout-app{% endblock %}
+
+{% block topbar_heading %}Profile Details{% endblock %}
+{% block topbar_subtitle %}<p>Manage your developer identity, profile photos, and personal account credentials</p>{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Profile Layout ── */
+.cl-profile-container {
+    max-width: 800px;
+    margin: 0 auto 3rem auto;
+}
+
+.cl-profile-card {
+    background: var(--cl-surface);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    box-shadow: var(--cl-shadow);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cl-profile-card:hover {
+    border-color: var(--cl-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(124, 58, 237, 0.08);
+}
+
+.cl-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border-bottom: 1px solid var(--cl-border);
+    padding-bottom: 1.5rem;
+}
+
+.cl-profile-avatar-wrap {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.cl-profile-large-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--cl-primary-soft);
+    box-shadow: var(--cl-shadow);
+}
+
+.cl-profile-large-initials {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--cl-gradient);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    font-weight: 800;
+    border: 3px solid var(--cl-primary-soft);
+    box-shadow: var(--cl-shadow);
+}
+
+.cl-profile-meta h3 {
+    font-family: var(--cl-font-display);
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--cl-text);
+    margin: 0 0 0.25rem 0;
+}
+.cl-profile-meta p {
+    font-size: 0.88rem;
+    color: var(--cl-text-muted);
+    margin: 0;
+}
+.cl-plan-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.15rem 0.6rem;
+    border-radius: 20px;
+    margin-top: 0.4rem;
+}
+.cl-plan-badge--free {
+    background: var(--cl-bg-soft);
+    border: 1px solid var(--cl-border);
+    color: var(--cl-text-muted);
+}
+.cl-plan-badge--pro {
+    background: rgba(124, 58, 237, 0.12);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    color: var(--cl-primary);
+}
+.cl-plan-badge--ultra {
+    background: rgba(219, 39, 119, 0.12);
+    border: 1px solid rgba(219, 39, 119, 0.2);
+    color: #db2777;
+}
+
+/* ── Form Fields ── */
+.cl-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.cl-form-group label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--cl-text-muted);
+}
+.cl-form-control {
+    background: var(--cl-bg-muted);
+    border: 1.5px solid var(--cl-border);
+    border-radius: var(--cl-radius-sm);
+    padding: 0.75rem 1rem;
+    color: var(--cl-text);
+    font-family: var(--cl-font);
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cl-form-control:focus {
+    border-color: var(--cl-primary);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+}
+.cl-form-control:hover:not(:disabled) {
+    border-color: var(--cl-primary);
+}
+.cl-form-control:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ── Alerts ── */
+.cl-alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+.cl-settings-alert {
+    padding: 0.85rem 1.25rem;
+    border-radius: var(--cl-radius-sm);
+    font-size: 0.88rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    border: 1px solid transparent;
+}
+.cl-settings-alert--success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.25);
+    color: #10b981;
+}
+.cl-settings-alert--error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+}
+
+.cl-btn {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cl-btn:hover {
+    transform: translateY(-2px);
+}
+.cl-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cl-profile-container" data-reveal>
+    
+    <!-- ── Dynamic Alerts ── -->
+    {% if messages %}
+    <div class="cl-alert-list">
+        {% for message in messages %}
+        <div class="cl-settings-alert cl-settings-alert--{{ message.tags }}">
+            {% if message.tags == 'success' %}
+            <i class="fa-solid fa-circle-check"></i>
+            {% else %}
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            {% endif %}
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <article class="cl-profile-card">
+        <!-- Profile Header with Large Avatar -->
+        <div class="cl-profile-header">
+            <div class="cl-profile-avatar-wrap">
+                {% if user.profile.avatar_url %}
+                <img src="{{ user.profile.avatar_url }}" alt="{{ user.first_name }}" class="cl-profile-large-avatar" />
+                {% else %}
+                <div class="cl-profile-large-initials">{{ user.first_name|default:user.username|slice:":1"|upper }}</div>
+                {% endif %}
+            </div>
+            <div class="cl-profile-meta">
+                <h3>
+                    {% if user.first_name %}
+                        {{ user.first_name }}{% if user.last_name %} {{ user.last_name }}{% endif %}
+                    {% else %}
+                        {{ user.username|title }}
+                    {% endif %}
+                </h3>
+                <p>{{ user.email }}</p>
+                <div class="cl-plan-badge cl-plan-badge--{{ profile.plan_type }}">
+                    <i class="fa-solid {% if profile.plan_type == 'ultra' %}fa-wand-magic-sparkles{% elif profile.plan_type == 'pro' %}fa-star{% else %}fa-leaf{% endif %}"></i>
+                    <span>{{ profile.plan_type }} Plan</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Details Form -->
+        <form method="POST" style="display:flex; flex-direction:column; gap:1.25rem">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_profile">
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem">
+                <div class="cl-form-group">
+                    <label for="firstName">First name</label>
+                    <input type="text" id="firstName" name="first_name" class="cl-form-control" value="{{ user.first_name|default:'' }}" placeholder="e.g. John" autocomplete="given-name">
+                </div>
+
+                <div class="cl-form-group">
+                    <label for="lastName">Last name</label>
+                    <input type="text" id="lastName" name="last_name" class="cl-form-control" value="{{ user.last_name|default:'' }}" placeholder="e.g. Doe" autocomplete="family-name">
+                </div>
+            </div>
+
+            <div class="cl-form-group">
+                <label>Username</label>
+                <input type="text" class="cl-form-control" value="{{ user.username }}" disabled style="cursor: not-allowed;">
+            </div>
+
+            <div class="cl-form-group">
+                <label for="emailAddr">Email address</label>
+                <input type="email" id="emailAddr" name="email" class="cl-form-control" value="{{ user.email }}" placeholder="developer@codelens.com" autocomplete="email">
+            </div>
+
+            <button type="submit" class="cl-btn cl-btn--primary" style="align-self:flex-start; margin-top:0.5rem; padding: 0.75rem 1.5rem;">
+                <i class="fa-solid fa-floppy-disk" style="margin-right:0.35rem"></i> Save Profile Details
+            </button>
+        </form>
+    </article>
+</div>
+{% endblock %}

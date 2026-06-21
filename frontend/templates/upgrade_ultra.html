@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upgrade to Ultra — CodeLens{% endblock %}
+{% block body_class %}layout-app{% endblock %}
+
+{% block topbar_heading %}CodeLens Ultra{% endblock %}
+{% block topbar_subtitle %}<p>Step into the ultimate tier of developer excellence and unlimited AI refactoring speed</p>{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Standalone Ultra Layout ── */
+.cl-ultra-container {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    padding-bottom: 4rem;
+}
+
+/* ── Premium Glassmorphic Showcase ── */
+.cl-ultra-showcase {
+    position: relative;
+    background: radial-gradient(circle at top left, rgba(124, 58, 237, 0.12), rgba(219, 39, 119, 0.06)), var(--cl-surface);
+    border: 1.5px solid rgba(124, 58, 237, 0.35);
+    border-radius: var(--cl-radius);
+    padding: 3rem;
+    box-shadow: 0 25px 60px rgba(124, 58, 237, 0.12);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+.cl-ultra-glow {
+    position: absolute;
+    top: -30%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, transparent 70%);
+    pointer-events: none;
+}
+.cl-ultra-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 2;
+}
+.cl-ultra-badge {
+    align-self: flex-start;
+    background: linear-gradient(90deg, var(--cl-primary), #db2777);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+.cl-ultra-header h2 {
+    margin: 0.5rem 0 0 0;
+    font-family: var(--cl-font-display);
+    font-size: 2.4rem;
+    font-weight: 850;
+    background: linear-gradient(135deg, var(--cl-text) 20%, var(--cl-primary) 65%, #db2777 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.cl-ultra-subtitle {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--cl-text-muted);
+    max-width: 750px;
+    line-height: 1.6;
+}
+
+/* ── Feature Detailed Items ── */
+.cl-ultra-features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    position: relative;
+    z-index: 2;
+}
+@media (max-width: 768px) {
+    .cl-ultra-features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.cl-ultra-feature-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--cl-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: all 0.25s ease;
+}
+.cl-ultra-feature-card:hover {
+    border-color: rgba(124, 58, 237, 0.45);
+    transform: translateY(-3px);
+    background: rgba(124, 58, 237, 0.03);
+    box-shadow: 0 10px 25px rgba(124, 58, 237, 0.05);
+}
+.cl-ultra-feature-card i {
+    font-size: 1.8rem;
+    background: linear-gradient(135deg, var(--cl-primary), #db2777);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    align-self: flex-start;
+}
+.cl-ultra-feature-card h4 {
+    margin: 0;
+    font-family: var(--cl-font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--cl-text);
+}
+.cl-ultra-feature-card p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--cl-text-muted);
+    line-height: 1.5;
+}
+
+/* ── Checkout Area ── */
+.cl-ultra-checkout {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--cl-border);
+    padding-top: 2rem;
+    position: relative;
+    z-index: 2;
+}
+@media (max-width: 600px) {
+    .cl-ultra-checkout {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+        align-items: stretch;
+    }
+}
+.cl-ultra-price-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+.cl-price-val {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+}
+.cl-price-val h3 {
+    font-family: var(--cl-font-display);
+    font-size: 2.5rem;
+    font-weight: 850;
+    color: var(--cl-text);
+    margin: 0;
+}
+.cl-price-val span {
+    font-size: 1rem;
+    color: var(--cl-text-muted);
+}
+.cl-price-subtext {
+    font-size: 0.8rem;
+    color: var(--cl-text-muted);
+    margin: 0;
+}
+
+.cl-btn--ultra-action {
+    background: linear-gradient(135deg, var(--cl-primary), #db2777);
+    color: #fff !important;
+    border: none;
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 1rem 2.25rem;
+    border-radius: var(--cl-radius-sm);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-align: center;
+}
+.cl-btn--ultra-action:hover {
+    box-shadow: 0 10px 25px rgba(124, 58, 237, 0.5);
+    transform: translateY(-2px);
+}
+.cl-btn--ultra-active {
+    background: rgba(34, 197, 94, 0.12);
+    border: 1.5px solid var(--cl-success);
+    color: var(--cl-success) !important;
+    cursor: default;
+    box-shadow: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cl-ultra-container" data-reveal>
+    
+    <div class="cl-ultra-showcase">
+        <div class="cl-ultra-glow"></div>
+        
+        <div class="cl-ultra-header">
+            <div class="cl-ultra-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> Tier of Excellence</div>
+            <h2>CodeLens Ultra</h2>
+            <p class="cl-ultra-subtitle">Unlock unlimited code smell scanning, advanced structural maps, hyper-priority pipeline routing, and unrestricted AI refactoring suggestions optimized for large-scale codebases.</p>
+        </div>
+
+        <div class="cl-ultra-features-grid">
+            
+            <div class="cl-ultra-feature-card">
+                <i class="fa-solid fa-infinity"></i>
+                <h4>Unlimited Analyses</h4>
+                <p>Zero bounds on daily runs. Scan any codebase or private GitHub repository continuously without hitting quotas.</p>
+            </div>
+
+            <div class="cl-ultra-feature-card">
+                <i class="fa-solid fa-bolt"></i>
+                <h4>Priority Pipeline Speed</h4>
+                <p>Your requests bypass standard queues entirely and complete in hyper-speed with dedicated AI surgeon compute resources.</p>
+            </div>
+
+            <div class="cl-ultra-feature-card">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <h4>Unlimited AI Tutor Queries</h4>
+                <p>Ask our Qwen Coder AI expert complex structural architecture questions, design patterns advice, and direct code fixes.</p>
+            </div>
+
+        </div>
+
+        <div class="cl-ultra-checkout">
+            <div class="cl-ultra-price-box">
+                <div class="cl-price-val">
+                    <h3>Rs. 11,000</h3>
+                    <span>/ month</span>
+                </div>
+                <p class="cl-price-subtext"><i class="fa-solid fa-shield-halved"></i> 100% Secure transaction · Cancel anytime</p>
+            </div>
+
+            <div>
+                {% if profile.plan_type == 'ultra' %}
+                <button type="button" class="cl-btn--ultra-action cl-btn--ultra-active" disabled>
+                    <i class="fa-solid fa-circle-check"></i> Currently Active Plan
+                </button>
+                {% else %}
+                <form method="POST" id="upgradeForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="upgrade_ultra">
+                    <button type="button" class="cl-btn--ultra-action" onclick="confirmUpgrade()">
+                        Upgrade to CodeLens Ultra Now
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmUpgrade() {
+    window.CodeLens.confirm({
+        title: 'Upgrade to Ultra',
+        message: 'Are you sure you want to upgrade your subscription to CodeLens Ultra for Rs. 11,000 / month?\nYou will instantly unlock unlimited analyses and premium AI pipelines.',
+        confirmText: 'Yes, Upgrade Now',
+        cancelText: 'Cancel',
+        variant: 'info',
+        onConfirm: function() {
+            document.getElementById('upgradeForm').submit();
+        }
+    });
+}
+</script>
+{% endblock %}

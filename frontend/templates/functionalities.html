@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analysis Report — CodeLens{% endblock %}
+{% block topbar_heading %}Analysis Report{% endblock %}
+{% block topbar_subtitle %}<p>AI diagnostics & refactoring review</p>{% endblock %}
+
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/premium.css' %}?build=20260518v5">
+<link rel="stylesheet" href="{% static 'css/print.css' %}?build=20260518v5" media="print">
+{% endblock %}
+
+{% block content %}
+<div class="print-header">
+    <h1>CodeLens Analysis Report</h1>
+    <p>{{ user.first_name|title }} · {% now "F j, Y" %}</p>
+</div>
+
+<section class="report-page" data-reveal>
+    <nav class="report-toolbar" aria-label="Report actions">
+        {% if source == 'history' %}
+        <a href="{% url 'history' %}" class="report-toolbar__back">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Back to History</span>
+        </a>
+        {% else %}
+        <a href="{% url 'analyzer' %}" class="report-toolbar__back">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Back to Analyzer</span>
+        </a>
+        {% endif %}
+        <button type="button" class="cl-btn cl-btn--primary cl-btn--sm report-toolbar__download" onclick="downloadReport()">
+            <i class="fa-solid fa-download"></i> Download report
+        </button>
+    </nav>
+
+    <header class="report-hero">
+        <div class="report-hero__grid">
+            <div>
+                <p class="report-hero__eyebrow"><i class="fa-solid fa-circle-check"></i> Analysis complete</p>
+                <h2>Code health report</h2>
+                <p class="report-hero__meta">Analysis #{{ analysis.analysis_number }} · {{ health_label }} quality</p>
+            </div>
+
+            <div class="report-score" style="--score: {{ health_score }}">
+                <div class="report-score__ring" aria-hidden="true"></div>
+                <div class="report-score__inner">
+                    <span class="report-score__value">{{ health_score }}</span>
+                    <span class="report-score__label">{{ health_label }}</span>
+                </div>
+            </div>
+
+            <div class="report-stats">
+                <div class="stat-pill stat-pill--error">
+                    <span class="stat-pill__icon"><i class="fa-solid fa-bug"></i></span>
+                    <div><strong>{{ error_count }}</strong><span>Errors</span></div>
+                </div>
+                <div class="stat-pill stat-pill--warn">
+                    <span class="stat-pill__icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                    <div><strong>{{ smell_count }}</strong><span>Smells</span></div>
+                </div>
+                <div class="stat-pill stat-pill--info">
+                    <span class="stat-pill__icon"><i class="fa-solid fa-cube"></i></span>
+                    <div><strong>{{ oop_count }}</strong><span>OOP</span></div>
+                </div>
+                <div class="stat-pill stat-pill--ok">
+                    <span class="stat-pill__icon"><i class="fa-solid fa-code-branch"></i></span>
+                    <div><strong>{{ refactor_count }}</strong><span>Refactors</span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="report-workspace">
+        <nav class="report-nav" role="tablist" aria-label="Report sections">
+            <button type="button" class="report-nav__btn is-active" data-tab="errors">
+                <span class="report-nav__btn-left"><i class="fa-solid fa-bug"></i> Errors</span>
+                <span class="report-nav__count">{{ error_count }}</span>
+            </button>
+            <button type="button" class="report-nav__btn" data-tab="oop">
+                <span class="report-nav__btn-left"><i class="fa-solid fa-cube"></i> OOP</span>
+                <span class="report-nav__count">{{ oop_count }}</span>
+            </button>
+            <button type="button" class="report-nav__btn" data-tab="smells">
+                <span class="report-nav__btn-left"><i class="fa-solid fa-wand-magic-sparkles"></i> Smells & AI</span>
+                <span class="report-nav__count">{{ smell_count|add:refactor_count }}</span>
+            </button>
+        </nav>
+
+        <div class="report-stage">
+            <div id="panel-errors" class="report-panel is-active" role="tabpanel">
+                {% if errors %}
+                    {% for error in errors %}
+                    <article class="result-card result-card--error">
+                        <header class="result-card__head">
+                            <div class="result-card__icon-wrap">
+                                <span class="result-card__orb"><i class="fa-solid fa-circle-exclamation"></i></span>
+                                <div>
+                                    <h3 class="result-card__title">{{ error.error_type }}</h3>
+                                    <div class="result-card__tags">
+                                        {% if error.line_number %}<span class="tag">Line {{ error.line_number }}</span>{% endif %}
+                                        {% if error.error_type == 'UndefinedVariable' %}
+                                            <span class="tag tag--scope">Name / Scope Error</span>
+                                        {% elif error.error_type == 'SyntaxError' or error.error_type == 'ParseError' %}
+                                            <span class="tag tag--syntax">Syntax Error</span>
+                                        {% elif error.error_type == 'RuntimeError' %}
+                                            <span class="tag tag--runtime">Runtime Error</span>
+                                        {% else %}
+                                            <span class="tag tag--syntax">{{ error.error_type }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-ai" onclick="askAiToExplain('Error', '{{ error.error_type|escapejs }}', '{{ error.message|escapejs }}', 'explain-{{ error.id }}', this)">
+                                <i class="fa-solid fa-sparkles"></i> Explain
+                            </button>
+                        </header>
+                        <div class="result-card__body">
+                            <div class="code-panel"><pre>{{ error.message }}</pre></div>
+                            <div id="explain-{{ error.id }}" class="ai-response"></div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state-premium">
+                        <div class="empty-state-premium__icon">✅</div>
+                        <h3 style="font-family:var(--cl-font-display);margin-bottom:0.5rem">No errors detected</h3>
+                        <p style="color:var(--cl-text-muted)">No syntax errors or scope issues found. Your code is clean.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div id="panel-oop" class="report-panel" role="tabpanel">
+                {% if oop_concepts %}
+                    {% for concept in oop_concepts %}
+                    <article class="result-card result-card--oop">
+                        <header class="result-card__head">
+                            <div class="result-card__icon-wrap">
+                                <span class="result-card__orb"><i class="fa-solid fa-cube"></i></span>
+                                <div>
+                                    <h3 class="result-card__title">{{ concept.concept_name }}</h3>
+                                    <div class="result-card__tags"><span class="tag">OOP</span></div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-ai" onclick="askAiToExplain('OOP Concept', '{{ concept.concept_name|escapejs }}', '{{ concept.details|escapejs }}', 'explain-oop-{{ concept.id }}', this)">
+                                <i class="fa-solid fa-sparkles"></i> Explain
+                            </button>
+                        </header>
+                        <div class="result-card__body">
+                            {% if concept.details %}<div class="code-panel"><pre>{{ concept.details }}</pre></div>{% endif %}
+                            <div id="explain-oop-{{ concept.id }}" class="ai-response"></div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state-premium">
+                        <div class="empty-state-premium__icon"><i class="fa-solid fa-cube"></i></div>
+                        <h3 style="font-family:var(--cl-font-display)">No OOP constructs</h3>
+                        <p style="color:var(--cl-text-muted)">No classes or inheritance patterns detected.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div id="panel-smells" class="report-panel" role="tabpanel">
+                <article class="result-card result-card--warn">
+                    <header class="result-card__head">
+                        <div class="result-card__icon-wrap">
+                            <span class="result-card__orb"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                            <div>
+                                <h3 class="result-card__title">Structural diagnosis</h3>
+                                <div class="result-card__tags"><span class="tag">{{ smell_count }} findings</span></div>
+                            </div>
+                        </div>
+                    </header>
+                    <div class="result-card__body" style="display:grid;gap:1rem">
+                        {% if code_smells %}
+                            {% for smell in code_smells %}
+                            <div class="smell-card">
+                                <div class="smell-card__top">
+                                    <div>
+                                        <strong style="color:var(--cl-danger)">{{ smell.smell_type }}</strong>
+                                        {% if smell.line_number %}<span class="tag" style="margin-left:0.35rem">Line {{ smell.line_number }}</span>{% endif %}
+                                        <p style="color:var(--cl-text-muted);font-size:0.88rem;margin-top:0.35rem">{{ smell.detected_value }}</p>
+                                    </div>
+                                    <button type="button" class="btn-ai" onclick="askAiToExplain('Code Smell', '{{ smell.smell_type|escapejs }}', '{{ smell.suggestion|escapejs }}', 'explain-smell-{{ smell.id }}', this)">Why bad?</button>
+                                </div>
+                                <p style="font-size:0.85rem;padding:0.65rem 0.85rem;background:var(--cl-bg-muted);border-radius:8px;border:1px solid var(--cl-border)">{{ smell.suggestion }}</p>
+                                <div id="explain-smell-{{ smell.id }}" class="ai-response"></div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p style="color:var(--cl-success);font-weight:600">✨ No structural issues found.</p>
+                        {% endif %}
+                    </div>
+                </article>
+
+                {% for suggestion in refactoring_suggestions %}
+                {% if suggestion.refactored_code %}
+                <article class="result-card result-card--ai">
+                    <header class="result-card__head">
+                        <div class="result-card__icon-wrap">
+                            <span class="result-card__orb"><i class="fa-solid fa-robot"></i></span>
+                            <div>
+                                <h3 class="result-card__title">AI optimized code</h3>
+                                <div class="result-card__tags"><span class="tag">Refactor</span></div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+                            <button type="button" class="btn-ai" onclick="askAiToExplain('Refactoring', 'Optimized', '{{ suggestion.refactored_code|escapejs }}', 'explain-refactor-{{ forloop.counter }}', this)">Why better?</button>
+                            <button type="button" class="cl-btn cl-btn--success cl-btn--sm" onclick="copyToClipboard('refactoredCode{{ forloop.counter }}', this)"><i class="fa-regular fa-copy"></i> Copy</button>
+                        </div>
+                    </header>
+                    <div class="result-card__body">
+                        <div class="code-panel"><pre><code id="refactoredCode{{ forloop.counter }}">{{ suggestion.refactored_code }}</code></pre></div>
+                        <div id="explain-refactor-{{ forloop.counter }}" class="ai-response"></div>
+                    </div>
+                </article>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/analysis-page.js' %}?build=20260518v5"></script>
+{% endblock %}

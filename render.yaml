@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: codelens
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt && python backend/manage.py collectstatic --noinput
+    startCommand: gunicorn --chdir backend codelens.wsgi:application
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Set this in the Render dashboard using your Neon Connection String
+      - key: DB_ENGINE
+        value: postgresql
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "*"

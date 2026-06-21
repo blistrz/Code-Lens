@@ -1,0 +1,768 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Settings — CodeLens{% endblock %}
+{% block body_class %}layout-app{% endblock %}
+
+{% block topbar_heading %}Account Settings{% endblock %}
+{% block topbar_subtitle %}<p>Manage profile, security credentials, appearance, and advanced developer preferences</p>{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Settings Grid ── */
+.cl-settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+@media (max-width: 1024px) {
+    .cl-settings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Settings Card ── */
+.cl-settings-card {
+    background: var(--cl-surface);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    box-shadow: var(--cl-shadow);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cl-settings-card:hover {
+    border-color: var(--cl-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(124, 58, 237, 0.08);
+}
+.cl-settings-card h3 {
+    font-family: var(--cl-font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--cl-text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--cl-border);
+    padding-bottom: 0.75rem;
+    margin: 0;
+}
+.cl-settings-card--wide {
+    grid-column: span 2;
+}
+@media (max-width: 1024px) {
+    .cl-settings-card--wide {
+        grid-column: span 1;
+    }
+}
+
+/* ── Form Fields ── */
+.cl-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.cl-form-group label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--cl-text-muted);
+}
+.cl-form-control {
+    background: var(--cl-bg-muted);
+    border: 1.5px solid var(--cl-border);
+    border-radius: var(--cl-radius-sm);
+    padding: 0.75rem 1rem;
+    color: var(--cl-text);
+    font-family: var(--cl-font);
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+.cl-form-control:focus {
+    border-color: var(--cl-primary);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+}
+.cl-form-control:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ── Alerts ── */
+.cl-alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+.cl-settings-alert {
+    padding: 0.85rem 1.25rem;
+    border-radius: var(--cl-radius-sm);
+    font-size: 0.88rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    border: 1px solid transparent;
+}
+.cl-settings-alert--success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.25);
+    color: #10b981;
+}
+.cl-settings-alert--error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+}
+
+/* ── Preferences Center ── */
+.cl-pref-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative;
+}
+.cl-pref-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.95rem 1.25rem;
+    background: var(--cl-bg-muted);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius-sm);
+    color: var(--cl-text);
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+.cl-pref-row:hover {
+    background: rgba(124, 58, 237, 0.03);
+    border-color: var(--cl-primary);
+}
+.cl-pref-row__left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+.cl-pref-row__left i {
+    font-size: 1.15rem;
+    color: var(--cl-text-muted);
+    transition: color 0.2s;
+    width: 20px;
+    text-align: center;
+}
+.cl-pref-row:hover .cl-pref-row__left i {
+    color: var(--cl-primary);
+}
+.cl-pref-row__right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.cl-active-theme-label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--cl-text-muted);
+    background: var(--cl-border);
+    padding: 0.2rem 0.65rem;
+    border-radius: 20px;
+}
+.cl-chevron {
+    font-size: 0.8rem;
+    color: var(--cl-text-muted);
+}
+
+/* Upgrade Row Styling */
+.cl-pref-row--upgrade {
+    background: linear-gradient(90deg, rgba(124, 58, 237, 0.05), rgba(219, 39, 119, 0.05));
+    border-color: rgba(124, 58, 237, 0.2);
+}
+.cl-pref-row--upgrade:hover {
+    background: linear-gradient(90deg, rgba(124, 58, 237, 0.09), rgba(219, 39, 119, 0.09));
+    border-color: var(--cl-primary);
+    box-shadow: 0 0 15px rgba(124, 58, 237, 0.1);
+}
+.cl-pref-row--upgrade .cl-icon-sparkle {
+    color: #db2777 !important;
+}
+
+/* Floating Sub-menu Dropdown */
+.cl-theme-dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    width: 200px;
+    background: var(--cl-surface);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius-sm);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    padding: 0.35rem;
+    animation: cl-dropdown-fade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes cl-dropdown-fade {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.cl-dropdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.65rem 0.95rem;
+    border-radius: var(--cl-radius-sm);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--cl-text);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.cl-dropdown-item:hover {
+    background: rgba(124, 58, 237, 0.05);
+    color: var(--cl-primary);
+}
+.cl-dropdown-item.is-active {
+    background: rgba(124, 58, 237, 0.08);
+    color: var(--cl-primary);
+    font-weight: 700;
+}
+.cl-dropdown-item .cl-check-mark {
+    display: none;
+    font-size: 0.85rem;
+    color: var(--cl-primary);
+}
+.cl-dropdown-item.is-active .cl-check-mark {
+    display: block;
+}
+
+/* ── Developer Settings Layout ── */
+.cl-dev-preferences-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+@media (max-width: 768px) {
+    .cl-dev-preferences-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Custom premium switch button */
+.cl-toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    cursor: pointer;
+}
+.cl-toggle-switch input {
+    display: none;
+}
+.cl-switch-slider {
+    width: 44px;
+    height: 24px;
+    background: var(--cl-border);
+    border-radius: 20px;
+    position: relative;
+    transition: all 0.25s ease;
+}
+.cl-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.25s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.cl-toggle-switch:hover .cl-switch-slider {
+    border-color: var(--cl-primary);
+    box-shadow: 0 0 8px rgba(124, 58, 237, 0.15);
+}
+.cl-toggle-switch input:checked + .cl-switch-slider {
+    background: var(--cl-primary);
+}
+.cl-toggle-switch input:checked + .cl-switch-slider::before {
+    transform: translateX(20px);
+}
+
+.cl-refactor-level-selector {
+    display: flex;
+    background: var(--cl-bg-muted);
+    border: 1.5px solid var(--cl-border);
+    border-radius: var(--cl-radius-sm);
+    padding: 0.25rem;
+    gap: 0.25rem;
+}
+.cl-refactor-level-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border-radius: var(--cl-radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--cl-text-muted);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cl-refactor-level-btn:hover:not(.is-active) {
+    background: rgba(124, 58, 237, 0.05);
+    color: var(--cl-primary);
+}
+.cl-refactor-level-btn.is-active {
+    background: var(--cl-surface);
+    color: var(--cl-primary);
+    box-shadow: var(--cl-shadow);
+    transform: scale(1.02);
+}
+
+/* ── Interactive Form elements ── */
+.cl-form-control {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cl-form-control:hover:not(:disabled) {
+    border-color: var(--cl-primary);
+}
+
+/* ── Micro-interactions on generic buttons ── */
+.cl-btn {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cl-btn:hover {
+    transform: translateY(-2px);
+}
+.cl-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+/* ── Animated Preferences saved Alert banner ── */
+#preferencesSavedAlert {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-20px);
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.35s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), margin-bottom 0.3s ease;
+    margin-bottom: 0;
+}
+#preferencesSavedAlert.show {
+    max-height: 100px;
+    opacity: 1;
+    transform: translateY(0);
+    margin-bottom: 1.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cl-settings-container" data-reveal>
+    
+    <!-- ── Dynamic Alerts ── -->
+    {% if messages %}
+    <div class="cl-alert-list">
+        {% for message in messages %}
+        <div class="cl-settings-alert cl-settings-alert--{{ message.tags }}">
+            {% if message.tags == 'success' %}
+            <i class="fa-solid fa-circle-check"></i>
+            {% else %}
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            {% endif %}
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Real-time saved notification banner -->
+    <div class="cl-alert-list" id="preferencesSavedAlert">
+        <div class="cl-settings-alert cl-settings-alert--success">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Developer Preferences successfully saved to browser local state!</span>
+        </div>
+    </div>
+
+    <div class="cl-settings-grid">
+        
+
+
+        <!-- ── Card: Password & Security ── -->
+        <article class="cl-settings-card">
+            <h3><i class="fa-solid fa-shield-halved"></i> Security & password</h3>
+            <form method="POST" style="display:flex; flex-direction:column; gap:1.1rem">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="change_password">
+
+                <div class="cl-form-group">
+                    <label for="currPass">Current password</label>
+                    <input type="password" id="currPass" name="current_password" class="cl-form-control" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <div class="cl-form-group">
+                    <label for="newPass">New password</label>
+                    <input type="password" id="newPass" name="new_password" class="cl-form-control" placeholder="At least 6 characters" required autocomplete="new-password">
+                </div>
+
+                <div class="cl-form-group">
+                    <label for="confirmPass">Confirm new password</label>
+                    <input type="password" id="confirmPass" name="confirm_password" class="cl-form-control" placeholder="Re-enter password" required autocomplete="new-password">
+                </div>
+
+                <button type="submit" class="cl-btn cl-btn--primary" style="margin-top:0.5rem">Update account password</button>
+            </form>
+        </article>
+
+        <!-- ── Card: Preferences Center ── -->
+        <article class="cl-settings-card">
+            <h3><i class="fa-solid fa-sliders"></i> Preferences Center</h3>
+            <div class="cl-pref-list">
+                
+                <!-- Theme Option Dropdown Row -->
+                <div class="cl-pref-row" id="themeRow" onclick="toggleThemeDropdown(event)">
+                    <div class="cl-pref-row__left">
+                        <i class="fa-solid fa-circle-half-stroke cl-icon-theme"></i>
+                        <span>Theme</span>
+                    </div>
+                    <div class="cl-pref-row__right">
+                        <span id="activeThemeText" class="cl-active-theme-label">System</span>
+                        <i class="fa-solid fa-chevron-right cl-chevron"></i>
+                    </div>
+                    
+                    <!-- Floating Sub-menu Dropdown -->
+                    <div class="cl-theme-dropdown" id="themeDropdown">
+                        <div class="cl-dropdown-item" id="opt-system" onclick="changeTheme('system', event)">
+                            <span>System</span>
+                            <i class="fa-solid fa-circle-check cl-check-mark"></i>
+                        </div>
+                        <div class="cl-dropdown-item" id="opt-light" onclick="changeTheme('light', event)">
+                            <span>Light</span>
+                            <i class="fa-solid fa-circle-check cl-check-mark"></i>
+                        </div>
+                        <div class="cl-dropdown-item" id="opt-dark" onclick="changeTheme('dark', event)">
+                            <span>Dark</span>
+                            <i class="fa-solid fa-circle-check cl-check-mark"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auto-Save Drafts Option Row -->
+                <div class="cl-pref-row" style="cursor: default;">
+                    <div class="cl-pref-row__left">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <div style="display:flex; flex-direction:column; gap:0.15rem">
+                            <span>Auto-Save Code Drafts</span>
+                            <span style="font-size:0.72rem; font-weight:400; color:var(--cl-text-muted);">Cache active work in progress locally</span>
+                        </div>
+                    </div>
+                    <div class="cl-pref-row__right">
+                        <label class="cl-toggle-switch">
+                            <input type="checkbox" id="prefAutoSave" onchange="togglePrefAutoSave()">
+                            <span class="cl-switch-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Auditory Feedback Option Row -->
+                <div class="cl-pref-row" style="cursor: default;">
+                    <div class="cl-pref-row__left">
+                        <i class="fa-solid fa-volume-high"></i>
+                        <div style="display:flex; flex-direction:column; gap:0.15rem">
+                            <span>Auditory Feedback</span>
+                            <span style="font-size:0.72rem; font-weight:400; color:var(--cl-text-muted);">Play chimes on analysis completion and pre-check warnings</span>
+                        </div>
+                    </div>
+                    <div class="cl-pref-row__right">
+                        <label class="cl-toggle-switch">
+                            <input type="checkbox" id="prefSoundEffects" onchange="togglePrefSoundEffects()">
+                            <span class="cl-switch-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+        </article>
+
+        <!-- ── Card: Advanced Editor & Model Preferences ── -->
+        <article class="cl-settings-card cl-settings-card--wide">
+            <h3><i class="fa-solid fa-square-sliders"></i> Editor & Model Preferences</h3>
+            <p style="color:var(--cl-text-muted); font-size:0.9rem; margin:-0.5rem 0 0.5rem">Customize AI refactoring engines parameters, syntax validations, and code editor dimensions locally.</p>
+            
+            <div class="cl-dev-preferences-grid">
+                
+                <!-- Left column -->
+                <div style="display:flex; flex-direction:column; gap:1.25rem">
+                    
+                    <div class="cl-form-group">
+                        <label for="aiModel">AI Refactoring Model</label>
+                        <select id="aiModel" class="cl-form-control">
+                            <option value="qwen-32b">Qwen 2.5 Coder 32B (Default)</option>
+                            <option value="codellama-34b">CodeLlama 34B Instruct</option>
+                            <option value="mistral-7b">Mistral 7B Instruct</option>
+                            <option value="llama-3-8b">Llama 3 8B Instruct</option>
+                        </select>
+                    </div>
+
+                    <div class="cl-form-group">
+                        <label>AI Refactoring Level</label>
+                        <div class="cl-refactor-level-selector" id="refactorSelector">
+                            <button type="button" class="cl-refactor-level-btn" data-level="conservative" onclick="setRefactorLevel('conservative')">Conservative</button>
+                            <button type="button" class="cl-refactor-level-btn is-active" data-level="balanced" onclick="setRefactorLevel('balanced')">Balanced</button>
+                            <button type="button" class="cl-refactor-level-btn" data-level="creative" onclick="setRefactorLevel('creative')">Creative</button>
+                        </div>
+                    </div>
+
+                    <div class="cl-form-group" style="margin-top:0.4rem">
+                        <label>Compiler Gatekeepers</label>
+                        <label class="cl-toggle-switch" style="margin-top: 0.35rem">
+                            <input type="checkbox" id="syntaxCheck" checked>
+                            <span class="cl-switch-slider"></span>
+                            <span style="font-size:0.875rem; font-weight:500; color:var(--cl-text)">Perform local python syntax validation</span>
+                        </label>
+                    </div>
+
+                </div>
+
+                <!-- Right column -->
+                <div style="display:flex; flex-direction:column; gap:1.25rem">
+                    
+                    <div class="cl-form-group">
+                        <label for="smellsThreshold">Code Smells Severity Threshold</label>
+                        <select id="smellsThreshold" class="cl-form-control">
+                            <option value="verbose">Verbose (Report all structural smells)</option>
+                            <option value="warnings">Standard (Warnings & Critical only)</option>
+                            <option value="strict">Strict (Critical design failures only)</option>
+                        </select>
+                    </div>
+
+                    <div class="cl-form-group">
+                        <label for="codeFont">Code Block Font Family</label>
+                        <select id="codeFont" class="cl-form-control">
+                            <option value="JetBrains Mono">JetBrains Mono (System Default)</option>
+                            <option value="Fira Code">Fira Code (Developer ligatures)</option>
+                            <option value="Space Grotesk">Space Grotesk (Neo-display)</option>
+                        </select>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem">
+                        <div class="cl-form-group">
+                            <label for="codeFontSize">Font Size</label>
+                            <select id="codeFontSize" class="cl-form-control">
+                                <option value="12px">12px</option>
+                                <option value="14px">14px (Recommended)</option>
+                                <option value="16px">16px</option>
+                                <option value="18px">18px</option>
+                            </select>
+                        </div>
+                        <div class="cl-form-group">
+                            <label for="codeTabWidth">Tab Spacing Width</label>
+                            <select id="codeTabWidth" class="cl-form-control">
+                                <option value="2">2 Spaces</option>
+                                <option value="4">4 Spaces (Standard)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <button type="button" class="cl-btn cl-btn--primary" style="align-self:flex-start; margin-top:0.5rem" onclick="saveDeveloperPreferences()">
+                <i class="fa-solid fa-floppy-disk"></i> Save Editor Preferences
+            </button>
+        </article>
+
+        <!-- ── Card: Delete Account ── -->
+        <article class="cl-settings-card cl-settings-card--wide">
+            <h3><i class="fa-solid fa-user-xmark"></i> Delete account</h3>
+            <div style="display:flex; flex-direction:column; gap:0.75rem">
+                <p style="color:var(--cl-text-muted); font-size:0.83rem; margin:0">Once deleted, your account, history, star records, profiles, and subscription details will be permanently removed. This action is absolute and cannot be undone.</p>
+                <form method="POST" action="{% url 'delete_account' %}" id="deleteAccountForm" style="display:inline-block;">
+                    {% csrf_token %}
+                    <button type="button" class="cl-btn cl-btn--danger" style="margin-top:0.5rem;" onclick="confirmDeleteAccount()">Delete my CodeLens account</button>
+                </form>
+            </div>
+        </article>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle Theme Dropdown Menu
+function toggleThemeDropdown(event) {
+    if (event) event.stopPropagation();
+    const dropdown = document.getElementById('themeDropdown');
+    const isVisible = dropdown.style.display === 'flex';
+    dropdown.style.display = isVisible ? 'none' : 'flex';
+}
+
+// Global click listener to close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('themeDropdown');
+    const trigger = document.getElementById('themeRow');
+    if (dropdown && dropdown.style.display === 'flex' && !trigger.contains(event.target)) {
+        dropdown.style.display = 'none';
+    }
+});
+
+// Change and Apply Theme
+function changeTheme(theme, event) {
+    if (event) event.stopPropagation();
+    setAppTheme(theme);
+    document.getElementById('themeDropdown').style.display = 'none';
+}
+
+// Override setAppTheme to support theme active classes
+const originalSetAppTheme = setAppTheme;
+function setAppTheme(theme) {
+    if (window.CodeLens && typeof window.CodeLens.setTheme === 'function') {
+        window.CodeLens.setTheme(theme);
+    } else {
+        localStorage.setItem('codelens-theme', theme);
+        if (theme === 'system') {
+            var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+        window.dispatchEvent(new CustomEvent('codelens-theme-change', { detail: { theme: theme } }));
+    }
+    
+    // Highlight active option
+    const optSystem = document.getElementById('opt-system');
+    const optLight = document.getElementById('opt-light');
+    const optDark = document.getElementById('opt-dark');
+    
+    if (optSystem && optLight && optDark) {
+        optSystem.classList.toggle('is-active', theme === 'system');
+        optLight.classList.toggle('is-active', theme === 'light');
+        optDark.classList.toggle('is-active', theme === 'dark');
+    }
+    
+    // Update active label
+    const activeLabel = document.getElementById('activeThemeText');
+    if (activeLabel) {
+        activeLabel.textContent = theme.charAt(0).toUpperCase() + theme.slice(1);
+    }
+}
+
+// Initial Theme Selection on page render
+const currentTheme = (window.CodeLens && typeof window.CodeLens.theme === 'function')
+    ? window.CodeLens.theme()
+    : (localStorage.getItem('codelens-theme') || 'system');
+setAppTheme(currentTheme);
+
+// Advanced Preferences Local Storage Management
+let activeRefactorLevel = 'balanced';
+
+function setRefactorLevel(level) {
+    activeRefactorLevel = level;
+    document.querySelectorAll('.cl-refactor-level-btn').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.level === level);
+    });
+}
+
+function saveDeveloperPreferences() {
+    const aiModel = document.getElementById('aiModel').value;
+    const syntaxCheck = document.getElementById('syntaxCheck').checked;
+    const smellsThreshold = document.getElementById('smellsThreshold').value;
+    const codeFont = document.getElementById('codeFont').value;
+    const codeFontSize = document.getElementById('codeFontSize').value;
+    const codeTabWidth = document.getElementById('codeTabWidth').value;
+
+    localStorage.setItem('cl-ai-model', aiModel);
+    localStorage.setItem('cl-refactor-level', activeRefactorLevel);
+    localStorage.setItem('cl-syntax-check', syntaxCheck);
+    localStorage.setItem('cl-smells-threshold', smellsThreshold);
+    localStorage.setItem('cl-code-font', codeFont);
+    localStorage.setItem('cl-code-fontsize', codeFontSize);
+    localStorage.setItem('cl-code-tabwidth', codeTabWidth);
+
+    // Flash success notification with transitions
+    const alertBox = document.getElementById('preferencesSavedAlert');
+    alertBox.classList.add('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    setTimeout(() => {
+        alertBox.classList.remove('show');
+    }, 4000);
+}
+
+function togglePrefAutoSave() {
+    const isChecked = document.getElementById('prefAutoSave').checked;
+    localStorage.setItem('cl-pref-auto-save', isChecked ? 'true' : 'false');
+    flashPreferenceSaved();
+}
+
+function togglePrefSoundEffects() {
+    const isChecked = document.getElementById('prefSoundEffects').checked;
+    localStorage.setItem('cl-pref-sound-effects', isChecked ? 'true' : 'false');
+    flashPreferenceSaved();
+    
+    // Play a demo chime when toggled ON
+    if (isChecked && typeof window.playSynthSound === 'function') {
+        window.playSynthSound('success', true);
+    }
+}
+
+function flashPreferenceSaved() {
+    const alertBox = document.getElementById('preferencesSavedAlert');
+    alertBox.classList.add('show');
+    setTimeout(() => {
+        alertBox.classList.remove('show');
+    }, 3000);
+}
+
+function loadDeveloperPreferences() {
+    const aiModel = localStorage.getItem('cl-ai-model') || 'qwen-32b';
+    const refactorLevel = localStorage.getItem('cl-refactor-level') || 'balanced';
+    const syntaxCheck = localStorage.getItem('cl-syntax-check') !== 'false'; // defaults to true
+    const smellsThreshold = localStorage.getItem('cl-smells-threshold') || 'verbose';
+    const codeFont = localStorage.getItem('cl-code-font') || 'JetBrains Mono';
+    const codeFontSize = localStorage.getItem('cl-code-fontsize') || '14px';
+    const codeTabWidth = localStorage.getItem('cl-code-tabwidth') || '4';
+
+    document.getElementById('aiModel').value = aiModel;
+    setRefactorLevel(refactorLevel);
+    document.getElementById('syntaxCheck').checked = syntaxCheck;
+    document.getElementById('smellsThreshold').value = smellsThreshold;
+    document.getElementById('codeFont').value = codeFont;
+    document.getElementById('codeFontSize').value = codeFontSize;
+    document.getElementById('codeTabWidth').value = codeTabWidth;
+    
+    // Load preference center checkboxes
+    const prefAutoSave = localStorage.getItem('cl-pref-auto-save') === 'true';
+    const prefSoundEffects = localStorage.getItem('cl-pref-sound-effects') === 'true';
+    document.getElementById('prefAutoSave').checked = prefAutoSave;
+    document.getElementById('prefSoundEffects').checked = prefSoundEffects;
+}
+
+// Load choices on DOM ready
+document.addEventListener('DOMContentLoaded', loadDeveloperPreferences);
+
+// Account deletion checks
+function confirmDeleteAccount() {
+    window.CodeLens.confirm({
+        title: 'Delete CodeLens Account',
+        message: '🚨 CRITICAL WARNING! 🚨\nAre you absolutely sure you want to permanently delete your account?\nThis will wipe your profile, custom quota details, and all analyses forever.\n\nThis action cannot be undone.',
+        confirmText: 'Yes, Delete My Account',
+        cancelText: 'Cancel',
+        variant: 'danger',
+        onConfirm: function() {
+            document.getElementById('deleteAccountForm').submit();
+        }
+    });
+}
+</script>
+{% endblock %}

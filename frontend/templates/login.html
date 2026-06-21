@@ -1,0 +1,429 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign in — CodeLens{% endblock %}
+{% block body_class %}layout-auth{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Auth Premium Styles ── */
+.auth-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Left branding panel */
+.auth-brand {
+    position: relative;
+    background: linear-gradient(145deg, #4f1fcf 0%, #7c3aed 40%, #06b6d4 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 3rem;
+    overflow: hidden;
+}
+.auth-brand::before {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+    top: -200px; left: -150px;
+}
+.auth-brand::after {
+    content: '';
+    position: absolute;
+    width: 350px; height: 350px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    bottom: -120px; right: -80px;
+}
+.auth-brand__logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    position: relative;
+    z-index: 1;
+}
+.auth-brand__logo-mark {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--cl-font-mono);
+    font-weight: 700; font-size: 0.9rem;
+    color: #fff;
+}
+.auth-brand__logo-name {
+    font-family: var(--cl-font-display);
+    font-weight: 700; font-size: 1.25rem;
+    color: #fff; letter-spacing: -0.02em;
+}
+.auth-brand__center { position: relative; z-index: 1; }
+.auth-brand__tagline {
+    font-family: var(--cl-font-display);
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+}
+.auth-brand__sub {
+    color: rgba(255,255,255,0.75);
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 340px;
+}
+.auth-brand__features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative; z-index: 1;
+}
+.auth-brand__feat {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: rgba(255,255,255,0.9);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+.auth-brand__feat-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+/* Right form panel */
+.auth-form-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3rem clamp(1.5rem, 5vw, 4rem);
+    background: var(--cl-bg);
+    overflow-y: auto;
+}
+.auth-form-inner {
+    max-width: 420px;
+    width: 100%;
+    margin: 0 auto;
+    animation: authFadeIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes authFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: none; }
+}
+.auth-form-inner h2 {
+    font-family: var(--cl-font-display);
+    font-size: 1.85rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--cl-text);
+    margin-bottom: 0.35rem;
+}
+.auth-form-inner > p {
+    color: var(--cl-text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+}
+
+/* Social buttons */
+.auth-social-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    margin-bottom: 1.5rem;
+}
+.auth-social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid var(--cl-border-strong);
+    border-radius: var(--cl-radius-sm);
+    background: var(--cl-surface);
+    color: var(--cl-text);
+    font-family: var(--cl-font);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.22s ease;
+}
+.auth-social-btn:hover {
+    border-color: var(--cl-primary);
+    background: var(--cl-primary-soft);
+    color: var(--cl-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(124,58,237,0.15);
+}
+.auth-social-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+/* Divider */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    color: var(--cl-text-subtle);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.auth-divider::before, .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--cl-border);
+}
+
+/* Floating label inputs */
+.auth-field {
+    position: relative;
+    margin-bottom: 1rem;
+}
+.auth-field input {
+    width: 100%;
+    padding: 1rem 1rem 0.5rem;
+    border: 1.5px solid var(--cl-border);
+    border-radius: var(--cl-radius-sm);
+    background: var(--cl-surface);
+    color: var(--cl-text);
+    font-family: var(--cl-font);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.auth-field input:focus {
+    border-color: var(--cl-primary);
+    box-shadow: 0 0 0 3px var(--cl-primary-soft);
+}
+.auth-field label {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--cl-text-subtle);
+    font-size: 0.9rem;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+.auth-field input:focus ~ label,
+.auth-field input:not(:placeholder-shown) ~ label {
+    top: 0.45rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--cl-primary);
+    letter-spacing: 0.02em;
+}
+.auth-field__pw-toggle {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--cl-text-subtle);
+    font-size: 0.85rem;
+    padding: 0.25rem;
+    transition: color 0.2s;
+}
+.auth-field__pw-toggle:hover { color: var(--cl-primary); }
+
+/* Error alert */
+.auth-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1rem;
+    border-radius: var(--cl-radius-sm);
+    background: rgba(220,38,38,0.08);
+    border: 1px solid rgba(220,38,38,0.25);
+    color: var(--cl-danger);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+/* Submit button */
+.auth-submit {
+    width: 100%;
+    padding: 0.9rem;
+    border: none;
+    border-radius: var(--cl-radius-sm);
+    background: var(--cl-gradient);
+    color: #fff;
+    font-family: var(--cl-font);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: transform 0.2s, box-shadow 0.25s, filter 0.2s;
+    box-shadow: 0 8px 24px rgba(124,58,237,0.35);
+    margin-top: 0.5rem;
+}
+.auth-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(124,58,237,0.45); filter: brightness(1.05); }
+.auth-submit:active { transform: scale(0.98); }
+
+/* Footer link */
+.auth-foot {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--cl-text-muted);
+}
+.auth-foot a { color: var(--cl-primary); font-weight: 600; text-decoration: none; }
+.auth-foot a:hover { text-decoration: underline; }
+.auth-back {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    color: var(--cl-text-subtle); font-size: 0.8rem; text-decoration: none;
+    margin-top: 1rem;
+    transition: color 0.2s;
+}
+.auth-social-btn--disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(0.5);
+}
+
+/* Responsive */
+@media (max-width: 800px) {
+    .auth-shell { grid-template-columns: 1fr; }
+    .auth-brand { display: none; }
+    .auth-form-panel { padding: 2.5rem 1.25rem; min-height: 100vh; }
+}
+</style>
+{% endblock %}
+
+{% block shell %}
+<div class="auth-shell">
+
+    <!-- ── Left: Branding panel ── -->
+    <div class="auth-brand">
+        <a href="{% url 'home' %}" class="auth-brand__logo">
+            <span class="auth-brand__logo-mark">
+                <img src="{% static 'img/logo_light.png' %}" alt="CodeLens" class="cl-logo-img cl-logo-img--light" />
+                <img src="{% static 'img/logo_dark.png' %}" alt="CodeLens" class="cl-logo-img cl-logo-img--dark" />
+            </span>
+            <span class="auth-brand__logo-name">CodeLens</span>
+        </a>
+        <div class="auth-brand__center">
+            <h2 class="auth-brand__tagline">Ship cleaner Python with AI precision</h2>
+            <p class="auth-brand__sub">Instant error detection, OOP analysis, smell scoring, and AI-powered refactoring — all in one place.</p>
+        </div>
+        <div class="auth-brand__features">
+            <div class="auth-brand__feat">
+                <span class="auth-brand__feat-icon"><i class="fa-solid fa-bug"></i></span>
+                Real-time syntax error detection
+            </div>
+            <div class="auth-brand__feat">
+                <span class="auth-brand__feat-icon"><i class="fa-solid fa-cube"></i></span>
+                OOP Analysis
+            </div>
+            <div class="auth-brand__feat">
+                <span class="auth-brand__feat-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                AI-powered code refactoring
+            </div>
+            <div class="auth-brand__feat">
+                <span class="auth-brand__feat-icon"><i class="fa-brands fa-github"></i></span>
+                GitHub &amp; Gist integration
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Right: Form panel ── -->
+    <div class="auth-form-panel">
+        <div class="auth-form-inner">
+            <h2>Welcome back</h2>
+            <p>Sign in to run AI-powered analysis</p>
+
+            <!-- Social Buttons -->
+            <div class="auth-social-grid">
+                {% if social.google %}
+                <a href="/accounts/google/login/?next=/" class="auth-social-btn" id="googleLoginBtn">
+                {% else %}
+                <span class="auth-social-btn auth-social-btn--disabled" title="Add GOOGLE_CLIENT_ID to .env to enable" id="googleLoginBtn">
+                {% endif %}
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Google{% if not social.google %} <i class="fa-solid fa-lock" style="font-size:0.65rem;opacity:0.5"></i>{% endif %}
+                {% if social.google %}</a>{% else %}</span>{% endif %}
+
+                {% if social.github %}
+                <a href="/accounts/github/login/?next=/" class="auth-social-btn" id="githubLoginBtn">
+                {% else %}
+                <span class="auth-social-btn auth-social-btn--disabled" title="Add GITHUB_CLIENT_ID to .env to enable" id="githubLoginBtn">
+                {% endif %}
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                    </svg>
+                    GitHub{% if not social.github %} <i class="fa-solid fa-lock" style="font-size:0.65rem;opacity:0.5"></i>{% endif %}
+                {% if social.github %}</a>{% else %}</span>{% endif %}
+            </div>
+
+            <div class="auth-divider">or continue with credentials</div>
+
+            <form method="POST" autocomplete="on">
+                {% csrf_token %}
+
+                <div class="auth-field">
+                    <input type="text" id="loginIdentifier" name="identifier" placeholder=" " required autocomplete="off">
+                    <label for="loginIdentifier">Email address or username</label>
+                </div>
+
+                <div class="auth-field">
+                    <input type="password" id="loginPassword" name="password" placeholder=" " required autocomplete="current-password">
+                    <label for="loginPassword">Password</label>
+                    <button type="button" class="auth-field__pw-toggle" onclick="togglePw('loginPassword', this)" aria-label="Show password">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+
+                {% if error %}
+                <div class="auth-alert">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <button type="submit" class="auth-submit" id="signInBtn">Sign in</button>
+            </form>
+
+            <p class="auth-foot">No account? <a href="{% url 'signup' %}">Create one free</a></p>
+            <div style="text-align:center">
+                <a href="{% url 'home' %}" class="auth-back"><i class="fa-solid fa-arrow-left"></i> Back to home</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePw(inputId, btn) {
+    const inp = document.getElementById(inputId);
+    const isHidden = inp.type === 'password';
+    inp.type = isHidden ? 'text' : 'password';
+    btn.innerHTML = isHidden
+        ? '<i class="fa-regular fa-eye-slash"></i>'
+        : '<i class="fa-regular fa-eye"></i>';
+}
+</script>
+{% endblock %}

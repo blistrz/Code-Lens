@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Subscription — CodeLens{% endblock %}
+{% block body_class %}layout-app{% endblock %}
+
+{% block topbar_heading %}Manage Subscription{% endblock %}
+{% block topbar_subtitle %}<p>Manage your account subscription level, view pricing benefits, and upgrade tiers</p>{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Premium Subscription Layout ── */
+.cl-subs-container {
+    max-width: 950px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding-bottom: 3.5rem;
+}
+
+/* ── Active Plan Status Card ── */
+.cl-active-plan-card {
+    background: radial-gradient(circle at top left, rgba(124, 58, 237, 0.08), rgba(219, 39, 119, 0.04)), var(--cl-surface);
+    border: 1px solid var(--cl-primary);
+    border-radius: var(--cl-radius);
+    padding: 1.75rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(124, 58, 237, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+.cl-active-plan-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--cl-gradient);
+}
+@media (max-width: 768px) {
+    .cl-active-plan-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.5rem;
+    }
+}
+.cl-active-plan-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.cl-active-plan-info span {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--cl-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.cl-active-plan-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.cl-active-plan-title h2 {
+    font-family: var(--cl-font-display);
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 0;
+    background: var(--cl-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.cl-active-plan-badge {
+    background: rgba(124, 58, 237, 0.1);
+    border: 1.5px solid var(--cl-primary);
+    color: var(--cl-primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+.cl-active-plan-desc {
+    font-size: 0.88rem;
+    color: var(--cl-text-muted);
+    margin: 0;
+}
+
+/* ── Pricing & Tier Cards ── */
+.cl-pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    align-items: stretch;
+}
+@media (max-width: 900px) {
+    .cl-pricing-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cl-pricing-card {
+    background: var(--cl-surface);
+    border: 1.5px solid var(--cl-border);
+    border-radius: 16px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--cl-shadow);
+}
+.cl-pricing-card:hover {
+    border-color: var(--cl-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(124,58,237,0.08);
+}
+.cl-pricing-card.is-active {
+    border-color: var(--cl-primary);
+    background: radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.03), transparent), var(--cl-surface);
+    box-shadow: 0 0 0 2px var(--cl-primary), 0 15px 35px rgba(124,58,237,0.1);
+}
+.cl-pricing-card__badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: var(--cl-gradient);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.cl-pricing-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.cl-pricing-header h3 {
+    font-family: var(--cl-font-display);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--cl-text);
+    margin: 0;
+}
+.cl-pricing-price {
+    font-family: var(--cl-font-display);
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: var(--cl-text);
+}
+.cl-pricing-price span {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--cl-text-muted);
+}
+
+.cl-pricing-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    font-size: 0.88rem;
+    color: var(--cl-text-muted);
+    flex-grow: 1;
+}
+.cl-pricing-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.cl-pricing-features li i {
+    color: var(--cl-success);
+    font-size: 0.85rem;
+    width: 15px;
+    text-align: center;
+}
+
+/* ── Custom Pricing Button styles ── */
+.cl-btn--pricing {
+    width: 100%;
+    text-align: center;
+    padding: 0.85rem 1rem;
+    font-weight: 700;
+    font-size: 0.92rem;
+    border-radius: var(--cl-radius-sm);
+    transition: all 0.2s ease;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+}
+.cl-btn--pricing-active {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--cl-success);
+    border-color: rgba(34, 197, 94, 0.3);
+    cursor: default;
+}
+.cl-btn--pricing-action {
+    background: var(--cl-bg-muted);
+    color: var(--cl-text);
+    border-color: var(--cl-border);
+}
+.cl-btn--pricing-action:hover {
+    border-color: var(--cl-primary);
+    background: rgba(124, 58, 237, 0.05);
+    color: var(--cl-primary);
+}
+.cl-btn--pricing-upgrade {
+    background: var(--cl-gradient);
+    color: #fff !important;
+    border: none;
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);
+}
+.cl-btn--pricing-upgrade:hover {
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cl-subs-container" data-reveal>
+    
+    <!-- ── Active subscription status banner ── -->
+    <section class="cl-active-plan-card">
+        <div class="cl-active-plan-info">
+            <span>Your Current Plan</span>
+            <div class="cl-active-plan-title">
+                <h2>{{ profile.plan_type|title }} Plan</h2>
+                <span class="cl-active-plan-badge">Active</span>
+            </div>
+            <p class="cl-active-plan-desc">
+                {% if profile.plan_type == 'free' %}
+                Enjoying standard developer tools and 30 daily analysis scans.
+                {% elif profile.plan_type == 'pro' %}
+                Full smells engine enabled, private repositories scans, and 200 daily analyses.
+                {% else %}
+                Unlimited Qwen Coder analyses, prioritized queuing, and unlimited AI tutor queries.
+                {% endif %}
+            </p>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.35rem">
+            {% if profile.plan_type != 'ultra' %}
+            <a href="{% url 'upgrade_ultra' %}" class="cl-btn cl-btn--primary">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Upgrade to Ultra
+            </a>
+            {% else %}
+            <button class="cl-btn cl-btn--success" disabled style="cursor:default">
+                <i class="fa-solid fa-circle-check"></i> Highest Tier Active
+            </button>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Pricing Grid Selection -->
+    <section style="display:flex; flex-direction:column; gap:1rem">
+        <h3 style="font-family:var(--cl-font-display); font-weight:700; margin:0; font-size:1.2rem; display:flex; align-items:center; gap:0.5rem">
+            <i class="fa-solid fa-circle-dollar-to-slot" style="color:var(--cl-primary)"></i> Available subscription tiers
+        </h3>
+        <p style="color:var(--cl-text-muted); font-size:0.88rem; margin: -0.5rem 0 0.5rem">Select any plan tier to modify your subscription status. All rates are shown in Pakistani Rupees (PKR).</p>
+        
+        <form method="POST" id="planForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_plan">
+            <input type="hidden" name="plan_type" id="planTypeInput" value="{{ profile.plan_type }}">
+
+            <div class="cl-pricing-grid">
+                
+                <!-- Free Tier -->
+                <div class="cl-pricing-card{% if profile.plan_type == 'free' %} is-active{% endif %}">
+                    <div class="cl-pricing-header">
+                        <h3>Free Plan</h3>
+                        <div class="cl-pricing-price">Rs. 0 <span>/ month</span></div>
+                    </div>
+                    <ul class="cl-pricing-features">
+                        <li><i class="fa-solid fa-circle-check"></i> 30 Daily analyses</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Syntax checks</li>
+                        <li><i class="fa-solid fa-circle-check"></i> OOP concept maps</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Basic smells detection</li>
+                    </ul>
+                    {% if profile.plan_type == 'free' %}
+                    <button type="button" class="cl-btn--pricing cl-btn--pricing-active" disabled>
+                        <i class="fa-solid fa-circle-check"></i> Currently Active
+                    </button>
+                    {% else %}
+                    <button type="button" class="cl-btn--pricing cl-btn--pricing-action" onclick="selectPlan('free')">
+                        Downgrade to Free
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- Pro Tier -->
+                <div class="cl-pricing-card{% if profile.plan_type == 'pro' %} is-active{% endif %}">
+                    <span class="cl-pricing-card__badge">Popular</span>
+                    <div class="cl-pricing-header">
+                        <h3>Pro Plan</h3>
+                        <div class="cl-pricing-price">Rs. 4,200 <span>/ month</span></div>
+                    </div>
+                    <ul class="cl-pricing-features">
+                        <li><i class="fa-solid fa-circle-check"></i> 200 Daily analyses</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Private GitHub/Gists</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Full smells engine</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Standard AI refactorings</li>
+                    </ul>
+                    {% if profile.plan_type == 'pro' %}
+                    <button type="button" class="cl-btn--pricing cl-btn--pricing-active" disabled>
+                        <i class="fa-solid fa-circle-check"></i> Currently Active
+                    </button>
+                    {% elif profile.plan_type == 'ultra' %}
+                    <button type="button" class="cl-btn--pricing cl-btn--pricing-action" onclick="selectPlan('pro')">
+                        Downgrade to Pro
+                    </button>
+                    {% else %}
+                    <button type="button" class="cl-btn--pricing cl-btn--pricing-upgrade" onclick="selectPlan('pro')">
+                        Upgrade to Pro
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- Ultra Tier -->
+                <div class="cl-pricing-card{% if profile.plan_type == 'ultra' %} is-active{% endif %}">
+                    <div class="cl-pricing-header">
+                        <h3>Ultra Plan</h3>
+                        <div class="cl-pricing-price">Rs. 11,000 <span>/ month</span></div>
+                    </div>
+                    <ul class="cl-pricing-features">
+                        <li><i class="fa-solid fa-circle-check"></i> Unlimited analyses</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Private GitHub/Gists</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Unlimited AI tutor queries</li>
+                        <li><i class="fa-solid fa-circle-check"></i> Priority processing speed</li>
+                    </ul>
+                    {% if profile.plan_type == 'ultra' %}
+                    <button type="button" class="cl-btn--pricing cl-btn--pricing-active" disabled>
+                        <i class="fa-solid fa-circle-check"></i> Currently Active
+                    </button>
+                    {% else %}
+                    <button type="button" class="cl-btn--pricing cl-btn--pricing-upgrade" onclick="selectPlan('ultra')">
+                        Upgrade to Ultra
+                    </button>
+                    {% endif %}
+                </div>
+
+            </div>
+        </form>
+    </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectPlan(plan) {
+    const currentPlan = "{{ profile.plan_type }}";
+    if (plan === currentPlan) return;
+    
+    window.CodeLens.confirm({
+        title: 'Change Subscription',
+        message: `Are you sure you want to update your subscription level to the ${plan.toUpperCase()} Plan?`,
+        confirmText: 'Yes, change plan',
+        cancelText: 'Cancel',
+        variant: 'info',
+        onConfirm: function() {
+            document.getElementById('planTypeInput').value = plan;
+            document.getElementById('planForm').submit();
+        }
+    });
+}
+</script>
+{% endblock %}

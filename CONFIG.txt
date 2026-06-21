@@ -1,0 +1,252 @@
+"""
+CODELENS MASTER CONFIGURATION GUIDE
+====================================
+
+This file contains all important configuration information for CodeLens.
+"""
+
+# ===== IMPORTANT PATHS =====
+Project Root: c:\Users\butta\OneDrive\Desktop\new bpee\django_project\
+Templates:    c:\Users\butta\OneDrive\Desktop\new bpee\django_project\codelens\templates\
+Static Files: c:\Users\butta\OneDrive\Desktop\new bpee\django_project\codelens\static\
+Django App:   c:\Users\butta\OneDrive\Desktop\new bpee\django_project\codelens\analyzer\
+
+# ===== DATABASE CONFIGURATION =====
+Settings File: codelens/settings.py
+
+Default Configuration (SQL Server):
+- Database Name: CodeLensDB
+- Driver: ODBC Driver 17 for SQL Server
+- Host: localhost
+- Port: 1433
+- User: sa
+- Password: [SET YOUR PASSWORD]
+
+Action Required:
+1. Install "ODBC Driver 17 for SQL Server"
+2. Create database "CodeLensDB" in SQL Server Management Studio
+3. Update credentials in settings.py
+
+# ===== APPLICATION STARTUP =====
+
+Windows Quick Start:
+1. Open Command Prompt
+2. Navigate to: c:\Users\butta\OneDrive\Desktop\new bpee\django_project\
+3. Run: quickstart.bat
+4. Or manually run:
+   - python -m venv venv
+   - venv\Scripts\activate
+   - pip install -r requirements.txt
+   - python manage.py migrate
+   - python manage.py runserver
+
+Linux/Mac Quick Start:
+1. Open Terminal
+2. Navigate to project directory
+3. Run: bash quickstart.sh
+4. Or manually run:
+   - python3 -m venv venv
+   - source venv/bin/activate
+   - pip install -r requirements.txt
+   - python manage.py migrate
+   - python manage.py runserver
+
+# ===== URL STRUCTURE =====
+
+Home Page:        http://localhost:8000/
+Login:            http://localhost:8000/login/
+Signup:           http://localhost:8000/signup/
+Analysis Results: http://localhost:8000/functionalities/?id=<analysis_id>
+History:          http://localhost:8000/history/
+Logout:           http://localhost:8000/logout/
+Admin:            http://localhost:8000/admin/
+
+# ===== FEATURES IMPLEMENTED =====
+
+✓ User Authentication (Sign up, Login, Logout)
+✓ Code Analysis with AST parsing
+✓ Error Detection
+✓ OOP Concept Identification (Classes, Inheritance, Methods)
+✓ Code Smell Detection (Magic Numbers, Long Methods)
+✓ Refactoring Suggestions
+✓ Analysis History with Pagination
+✓ Search & Filter Functionality
+✓ Star/Favorite Analyses
+✓ Soft Delete
+✓ SQL Server Database Integration
+✓ Dynamic Page Navigation with JavaScript
+✓ AJAX Form Submission
+✓ Tab-based Interface for Results
+✓ File Upload Support (.py, .txt)
+✓ Admin Dashboard
+
+# ===== KEY FILES =====
+
+Models:
+- codelens/analyzer/models.py
+  * UserProfile
+  * CodeAnalysis
+  * AnalysisHistory
+
+Views:
+- codelens/analyzer/views.py
+  * Authentication views (signin, signup, signout)
+  * Code analysis view (analyze_code)
+  * Results view (functionalities)
+  * History view (history)
+  * API views (get_analysis_detail, delete_history, star_analysis)
+
+URLs:
+- codelens/analyzer/urls.py - App routes
+- codelens/urls.py - Main project routes
+
+Templates (Django Templates):
+- codelens/templates/HomePage.html
+- codelens/templates/login.html
+- codelens/templates/signup.html
+- codelens/templates/functionalities.html
+- codelens/templates/history.html
+
+Static Assets:
+- codelens/static/css/HomePage.css
+- codelens/static/css/loginsingnup.css
+- codelens/static/css/functionalities.css
+- codelens/static/css/history.css
+- codelens/static/js/main.js
+- codelens/static/js/functionalities.js
+- codelens/static/js/history.js
+
+# ===== INTERACTIVE FEATURES =====
+
+HomePage:
+- Code Editor (textarea with 350px height)
+- File Upload Button
+- Analyze Button (AJAX submission)
+- Navbar with Login/Logout links
+- Features Cards
+
+Login Page:
+- Email and Password fields
+- Login button
+- Link to Signup
+- Error message display
+
+Signup Page:
+- Email, Username (optional), Password fields
+- Confirm Password field
+- Create Account button
+- Link to Login
+
+Analysis Results Page:
+- 3 Tabs: Error Detection, OOP Analysis, Code Smells
+- Card-based layout for each result
+- Code comparison (original vs fixed)
+- Refactoring recommendations
+- Back to Editor button
+
+History Page:
+- Searchable list of analyses
+- Star/Favorite toggle for each
+- Delete button for each
+- Pagination (10 items per page)
+- Click on item to view full results
+
+# ===== DATABASE STRUCTURE =====
+
+Tables Created:
+1. auth_user (Django built-in)
+   - Stores user authentication data
+
+2. analyzer_userprofile
+   - user_id (FK to auth_user)
+   - total_analyses
+   - created_at, updated_at
+
+3. analyzer_codeanalysis
+   - user_id (FK to auth_user)
+   - code_input (TEXT)
+   - errors_detected (JSON)
+   - oop_concepts (JSON)
+   - code_smells (JSON)
+   - refactoring_suggestions (JSON)
+   - status (pending/completed/error)
+   - error_message
+   - created_at, updated_at
+
+4. analyzer_analysishistory
+   - user_id (FK to auth_user)
+   - analysis_id (FK to analyzer_codeanalysis)
+   - title
+   - tags
+   - is_starred
+   - is_deleted
+   - created_at, viewed_at
+
+# ===== DEPENDENCIES =====
+
+Django==4.2.8
+pyodbc==5.0.1
+django-pyodbc-azure==2.1.0.0
+python-decouple==3.8
+requests==2.31.0
+
+# ===== USAGE WORKFLOW =====
+
+1. User visits home page (/)
+2. User clicks "Analyze Code" without login -> prompted to login
+3. User signs up (/signup/) with email and password
+4. User logs in (/login/)
+5. User enters Python code in editor
+6. User clicks "Analyze Code" button
+7. AJAX sends code to /analyze/ endpoint
+8. Backend performs code analysis using AST
+9. Results saved to database
+10. User redirected to /functionalities/?id=<analysis_id>
+11. Results displayed in tabbed interface
+12. User can view history (/history/)
+13. User can search and filter analyses
+14. User can star/delete analyses
+15. User can click to view any previous analysis
+
+# ===== IMPORTANT NOTES =====
+
+- All pages require proper Django template tags ({% csrf_token %}, {% url %}, {% load static %})
+- Static files must be collected for production
+- Migrations must be run before first use
+- Database must be created before migrations
+- ODBC driver required for SQL Server
+- Use environment variables for sensitive data in production
+- Session data stored in database (configurable)
+- User authentication required for analysis (enforced by @login_required)
+
+# ===== TROUBLESHOOTING =====
+
+1. "No module named 'sql_server'" 
+   - Install: pip install django-pyodbc-azure
+
+2. "ODBC Driver not found"
+   - Install Microsoft ODBC Driver 17 for SQL Server
+
+3. "Database does not exist"
+   - Create database in SQL Server Management Studio first
+
+4. "Static files not found"
+   - Run: python manage.py collectstatic --noinput
+
+5. "Login always fails"
+   - Ensure superuser created: python manage.py createsuperuser
+   - Check database connection
+
+# ===== NEXT STEPS =====
+
+1. Install dependencies
+2. Configure SQL Server credentials in settings.py
+3. Create database in SQL Server
+4. Run migrations
+5. Create superuser
+6. Start server
+7. Test login/signup
+8. Test code analysis
+9. Deploy to production with proper configurations
+
+"""

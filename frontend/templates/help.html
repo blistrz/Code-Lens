@@ -1,0 +1,704 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Help & Support — CodeLens{% endblock %}
+{% block body_class %}layout-app{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Bug Report 2-Column Grid ── */
+.cl-bug-report-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 1.75rem;
+}
+@media (max-width: 992px) {
+    .cl-bug-report-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cl-bug-card {
+    background: var(--cl-surface);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius);
+    padding: 1.75rem;
+    box-shadow: var(--cl-shadow);
+}
+
+/* Severity Chips */
+.cl-severity-chips {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+}
+.cl-severity-chip {
+    position: relative;
+    border: 1.5px solid var(--cl-border);
+    border-radius: var(--cl-radius-sm);
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--cl-text-muted);
+    background: var(--cl-bg-muted);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+.cl-severity-chip input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+.cl-severity-chip:hover {
+    border-color: rgba(124, 58, 237, 0.25);
+    color: var(--cl-primary);
+    transform: translateY(-2px);
+}
+.cl-severity-chip.is-active[data-severity="low"] {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.08);
+    color: #22c55e;
+}
+.cl-severity-chip.is-active[data-severity="medium"] {
+    border-color: #eab308;
+    background: rgba(234, 179, 8, 0.08);
+    color: #eab308;
+}
+.cl-severity-chip.is-active[data-severity="high"] {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+}
+
+/* Right Column Panels */
+.cl-diag-panel, .cl-upload-panel {
+    background: var(--cl-bg-muted);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius-sm);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.cl-diag-header {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--cl-text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.cl-diag-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--cl-text-muted);
+}
+.cl-diag-item {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px dashed var(--cl-border);
+}
+.cl-diag-val {
+    font-family: var(--cl-font-mono);
+    color: var(--cl-text);
+    font-weight: 500;
+    font-size: 0.76rem;
+    text-align: right;
+    max-width: 170px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Character counters */
+.cl-input-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.cl-char-counter {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--cl-text-muted);
+    transition: color 0.2s;
+}
+.cl-char-counter.is-warning {
+    color: #eab308;
+}
+.cl-char-counter.is-max {
+    color: #ef4444;
+}
+
+/* Drag and Drop Zone */
+.cl-drag-drop-zone {
+    border: 2px dashed var(--cl-border);
+    border-radius: var(--cl-radius-sm);
+    padding: 1.5rem 1rem;
+    text-align: center;
+    background: var(--cl-surface);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+.cl-drag-drop-zone.is-dragover {
+    border-color: var(--cl-primary);
+    background: rgba(124, 58, 237, 0.05);
+}
+.cl-drag-drop-zone i {
+    font-size: 1.75rem;
+    color: var(--cl-text-muted);
+    transition: color 0.2s;
+}
+.cl-drag-drop-zone:hover i, .cl-drag-drop-zone.is-dragover i {
+    color: var(--cl-primary);
+}
+.cl-drag-text {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--cl-text);
+}
+.cl-drag-subtext {
+    font-size: 0.72rem;
+    color: var(--cl-text-muted);
+}
+.cl-file-preview-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+.cl-file-preview-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: var(--cl-surface);
+    border: 1px solid var(--cl-border);
+    border-radius: var(--cl-radius-sm);
+    font-size: 0.78rem;
+    color: var(--cl-text);
+}
+.cl-file-preview-item i {
+    color: #22c55e;
+}
+.cl-file-remove {
+    cursor: pointer;
+    color: var(--cl-text-muted);
+    transition: color 0.15s;
+    font-size: 1.1rem;
+    line-height: 1;
+    font-weight: bold;
+}
+.cl-file-remove:hover {
+    color: #ef4444;
+}
+</style>
+{% endblock %}
+
+{% block topbar_heading %}Help & Policies{% endblock %}
+{% block topbar_subtitle %}<p>Browse the Help Center, review our developer-centric Privacy Policy, or report a system bug</p>{% endblock %}
+
+{% block content %}
+<div class="cl-help-container" data-reveal>
+    
+    <!-- ── Tab Navigation ── -->
+    <div class="cl-help-tabs" role="tablist" aria-label="Help Options">
+        <button type="button" class="cl-help-tab-btn is-active" id="tab-faq" role="tab" aria-selected="true" aria-controls="sec-faq">
+            <i class="fa-regular fa-circle-question" style="margin-right:0.4rem"></i>Help Center
+        </button>
+        <button type="button" class="cl-help-tab-btn" id="tab-privacy" role="tab" aria-selected="false" aria-controls="sec-privacy">
+            <i class="fa-solid fa-shield-halved" style="margin-right:0.4rem"></i>Privacy Policy
+        </button>
+        <button type="button" class="cl-help-tab-btn" id="tab-bug" role="tab" aria-selected="false" aria-controls="sec-bug">
+            <i class="fa-solid fa-bug" style="margin-right:0.4rem"></i>Report a Bug
+        </button>
+    </div>
+
+    <!-- ── Tab Content: Help Center (FAQ) ── -->
+    <section class="cl-help-section is-active" id="sec-faq" role="tabpanel" aria-labelledby="tab-faq">
+        <div class="cl-faq-group">
+            
+            <article class="cl-faq-card">
+                <button type="button" class="cl-faq-card__trigger" aria-expanded="false">
+                    <span>What is CodeLens and how does it analyze my code?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="cl-faq-card__content">
+                    <div class="cl-faq-card__inner">
+                        CodeLens is a next-generation code quality analyzer that inspects source code for critical errors, architectural smells, security gaps, and coding standards. Using customized local static models combined with advanced AI models like Qwen, CodeLens analyzes your input classes or files, generates a comprehensive health score, and provides actionable code suggestions to make your software safer and cleaner.
+                    </div>
+                </div>
+            </article>
+
+            <article class="cl-faq-card">
+                <button type="button" class="cl-faq-card__trigger" aria-expanded="false">
+                    <span>How are the Health Scores calculated?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="cl-faq-card__content">
+                    <div class="cl-faq-card__inner">
+                        Our health scoring algorithm calculates quality on a scale of 0 to 100. It begins at 100 and subtracts penalties based on the severity of issues detected:
+                        <ul>
+                            <li>🐛 <strong>Critical Errors</strong>: Significant penalty (-10 points per error) due to potential runtime crashes.</li>
+                            <li>🌿 <strong>Code Smells</strong>: Moderate penalty (-4 points per smell) focusing on clean code principles.</li>
+                            <li>📦 <strong>OOP Violations</strong>: Minor structural penalties that impact future maintainability.</li>
+                        </ul>
+                        Scores above 85 are marked as **Great** (Green), between 65 and 84 as **Good** (Blue), between 45 and 64 as **Fair** (Yellow), and below 45 as **Poor** (Red).
+                    </div>
+                </div>
+            </article>
+
+            <article class="cl-faq-card">
+                <button type="button" class="cl-faq-card__trigger" aria-expanded="false">
+                    <span>What AI models are supported on my current plan?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="cl-faq-card__content">
+                    <div class="cl-faq-card__inner">
+                        CodeLens prioritizes high-performance, developer-focused AI models:
+                        <ul>
+                            <li><strong>Free Plan</strong>: Access to core static analyzers and basic model parameters to test features.</li>
+                            <li><strong>Pro Plan</strong>: Advanced multi-model metrics with higher daily analysis counts.</li>
+                            <li><strong>Ultra Plan</strong>: Exclusive access to high-fidelity models like **Qwen** with unlimited code refactoring limits and instant rendering.</li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <article class="cl-faq-card">
+                <button type="button" class="cl-faq-card__trigger" aria-expanded="false">
+                    <span>How can I reset my daily analysis usage limits?</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="cl-faq-card__content">
+                    <div class="cl-faq-card__inner">
+                        Daily analysis limits are automatically reset 24 hours after your last usage, rather than on a fixed midnight timer. This gives you a continuous, rolling window to schedule your testing schedules flexibly. You can review your real-time limit status on the **Usage Limits** tab in the sidebar at any time.
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+    <!-- ── Tab Content: Privacy Policy ── -->
+    <section class="cl-help-section" id="sec-privacy" role="tabpanel" aria-labelledby="tab-privacy">
+        <div class="cl-privacy-card">
+            
+            <div class="cl-policy-block">
+                <h3><i class="fa-solid fa-user-shield" style="color:var(--cl-primary); margin-right:0.5rem"></i> 1. Security Gaps and Code Scanning Guarantees</h3>
+                <p>We believe your intellectual property belongs exclusively to you. Any source code, scripts, or repositories uploaded or scanned within CodeLens are analyzed inside temporary server sandboxes. We do not store, distribute, or use your uploaded code to train commercial or third-party AI models. Once an analysis is finished, details are cached in your local session storage and in your personal history table, which is fully encrypted in transit and at rest.</p>
+            </div>
+
+            <div class="cl-policy-block">
+                <h3><i class="fa-solid fa-key" style="color:var(--cl-primary); margin-right:0.5rem"></i> 2. OAuth and Avatar Integration</h3>
+                <p>When logging in using verified third-party providers (such as Google or GitHub), CodeLens requests minimal public profile scopes to authenticate your session safely. This includes your email, first name, last name, and profile picture avatar. Avatar pictures are formatted as a circular badge inside our top headers and sidebar widgets, helping you maintain a seamless premium developer dashboard experience without manual uploads.</p>
+            </div>
+
+            <div class="cl-policy-block">
+                <h3><i class="fa-solid fa-trash-can-arrow-up" style="color:var(--cl-primary); margin-right:0.5rem"></i> 3. Data Deletion and Portability</h3>
+                <p>You have full control over your footprint on CodeLens. You can clear your analysis history globally with a single click, or permanently delete your entire account along with all associated models, star states, subscriptions, and profile data from the Account Settings panel. Once deleted, this information is wiped from our main databases and backup nodes within 24 hours.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ── Tab Content: Report a Bug ── -->
+    <section class="cl-help-section" id="sec-bug" role="tabpanel" aria-labelledby="tab-bug">
+        <div class="cl-bug-card">
+            <h3 style="font-family:var(--cl-font-display); font-size:1.25rem; font-weight:700; margin-bottom:1.5rem; display:flex; align-items:center; gap:0.5rem">
+                <i class="fa-solid fa-bug" style="color:var(--cl-danger)"></i> Submit Bug Report
+            </h3>
+            
+            <form method="POST" id="bugReportForm" style="display:flex; flex-direction:column; gap:1.2rem">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="report_bug">
+                
+                <!-- Hidden inputs for telemetry and diagnostics -->
+                <input type="hidden" id="bugDiagnostics" name="diagnostics" value="">
+
+                <div class="cl-bug-report-grid">
+                    
+                    <!-- Left Column (Inputs) -->
+                    <div style="display:flex; flex-direction:column; gap:1.2rem">
+                        <div class="cl-form-group">
+                            <label for="bugTitle">Bug Title</label>
+                            <input type="text" id="bugTitle" name="bug_title" class="cl-form-control" placeholder="e.g. History star state is not synchronized" required>
+                        </div>
+
+                        <div class="cl-form-group">
+                            <label for="bugCategory">Category</label>
+                            <select id="bugCategory" name="category" class="cl-form-control" style="background-color: var(--cl-bg-muted);">
+                                <option value="ui">Visual &amp; Interface</option>
+                                <option value="ai">AI Analysis &amp; Refactoring</option>
+                                <option value="perf">Performance &amp; Loading Speed</option>
+                                <option value="other">Other System Issues</option>
+                            </select>
+                        </div>
+
+                        <div class="cl-form-group">
+                            <label>Severity Level</label>
+                            <div class="cl-severity-chips">
+                                <label class="cl-severity-chip is-active" data-severity="low">
+                                    <input type="radio" name="severity" value="low" checked onclick="selectSeverity('low')">
+                                    <i class="fa-solid fa-circle-check" style="font-size:0.9rem"></i>
+                                    <span>Low Severity</span>
+                                    <span style="font-size:0.68rem; font-weight:400; opacity:0.8;">Visual issue or minor glitch</span>
+                                </label>
+                                <label class="cl-severity-chip" data-severity="medium" onclick="selectSeverity('medium')">
+                                    <input type="radio" name="severity" value="medium">
+                                    <i class="fa-solid fa-triangle-exclamation" style="font-size:0.9rem"></i>
+                                    <span>Medium Severity</span>
+                                    <span style="font-size:0.68rem; font-weight:400; opacity:0.8;">Flawed behavior / workaround</span>
+                                </label>
+                                <label class="cl-severity-chip" data-severity="high" onclick="selectSeverity('high')">
+                                    <input type="radio" name="severity" value="high">
+                                    <i class="fa-solid fa-circle-radiation" style="font-size:0.9rem"></i>
+                                    <span>High Severity</span>
+                                    <span style="font-size:0.68rem; font-weight:400; opacity:0.8;">Fatal crash or feature blocker</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="cl-form-group">
+                            <div class="cl-input-header">
+                                <label for="bugSteps">Steps to Reproduce</label>
+                                <span class="cl-char-counter" id="stepsCounter">0 / 500</span>
+                            </div>
+                            <textarea id="bugSteps" name="steps" class="cl-form-control" rows="3" placeholder="1. Go to History page&#10;2. Click on a report card..." maxlength="500"></textarea>
+                        </div>
+
+                        <div class="cl-form-group">
+                            <div class="cl-input-header">
+                                <label for="bugDescription">Description</label>
+                                <span class="cl-char-counter" id="descCounter">0 / 1000</span>
+                            </div>
+                            <textarea id="bugDescription" name="bug_description" class="cl-form-control" rows="4" placeholder="Provide as much details about the bug as possible..." required maxlength="1000"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Right Column (Diagnostics & Upload) -->
+                    <div style="display:flex; flex-direction:column; gap:1.2rem">
+                        
+                        <!-- System Telemetry Diagnostics -->
+                        <div class="cl-diag-panel">
+                            <span class="cl-diag-header"><i class="fa-solid fa-desktop" style="color:var(--cl-primary)"></i> Auto-Telemetry Diagnostics</span>
+                            <p style="font-size:0.75rem; color:var(--cl-text-muted); margin:0">Include this secure telemetry checklist to help engineers debug faster.</p>
+                            
+                            <div class="cl-diag-list">
+                                <div class="cl-diag-item">
+                                    <span>Operating System</span>
+                                    <span class="cl-diag-val" id="diagOS">Detecting...</span>
+                                </div>
+                                <div class="cl-diag-item">
+                                    <span>User Agent Browser</span>
+                                    <span class="cl-diag-val" id="diagBrowser">Detecting...</span>
+                                </div>
+                                <div class="cl-diag-item">
+                                    <span>Screen Resolution</span>
+                                    <span class="cl-diag-val" id="diagScreen">Detecting...</span>
+                                </div>
+                                <div class="cl-diag-item">
+                                    <span>Timezone offset</span>
+                                    <span class="cl-diag-val" id="diagTimezone">Detecting...</span>
+                                </div>
+                                <div class="cl-diag-item">
+                                    <span>Local Timestamp</span>
+                                    <span class="cl-diag-val" id="diagLocalTime">Detecting...</span>
+                                </div>
+                            </div>
+                            
+                            <label class="cl-toggle-switch" style="margin-top: 0.35rem">
+                                <input type="checkbox" id="includeTelemetry" checked onchange="toggleTelemetryInclude()">
+                                <span class="cl-switch-slider"></span>
+                                <span style="font-size:0.8rem; font-weight:600; color:var(--cl-text)">Opt-in to include telemetry diagnostics</span>
+                            </label>
+                        </div>
+
+                        <!-- Drag and Drop Screenshots/Attachments -->
+                        <div class="cl-upload-panel">
+                            <span class="cl-diag-header"><i class="fa-solid fa-images" style="color:var(--cl-primary)"></i> Screenshots &amp; Logs</span>
+                            
+                            <div class="cl-drag-drop-zone" id="bugDragZone" onclick="document.getElementById('bugFiles').click()">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span class="cl-drag-text">Drag &amp; drop files here or browse</span>
+                                <span class="cl-drag-subtext">Supports PNG, JPG, JPEG, and TXT (Max 5MB per file)</span>
+                            </div>
+                            <input type="file" id="bugFiles" accept=".png,.jpg,.jpeg,.txt" multiple style="display:none" onchange="handleBugFileSelection(this.files)">
+                            
+                            <div class="cl-file-preview-list" id="bugFilePreviews"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <button type="submit" class="cl-btn cl-btn--primary" style="align-self:flex-start; margin-top:0.5rem; padding:0.75rem 2.5rem">
+                    <i class="fa-solid fa-paper-plane" style="margin-right:0.4rem"></i>Send Bug Report
+                </button>
+            </form>
+        </div>
+    </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    // ── Tab Switching Logic ──
+    const tabBtns = document.querySelectorAll('.cl-help-tab-btn');
+    const sections = document.querySelectorAll('.cl-help-section');
+
+    function activateTab(tabId) {
+        tabBtns.forEach(btn => {
+            const isActive = btn.id === tabId;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        sections.forEach(sec => {
+            const controlledBy = sec.getAttribute('aria-labelledby');
+            const isActive = controlledBy === tabId;
+            sec.classList.toggle('is-active', isActive);
+        });
+    }
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            activateTab(btn.id);
+            const hash = btn.id.replace('tab-', '');
+            history.pushState(null, null, '#' + hash);
+        });
+    });
+
+    // ── Deep Linking Support for URLs (e.g. /help/#bug) ──
+    function checkHash() {
+        const hash = window.location.hash.substring(1);
+        if (hash === 'help-center' || hash === 'faq') {
+            activateTab('tab-faq');
+        } else if (hash === 'privacy-policy' || hash === 'privacy') {
+            activateTab('tab-privacy');
+        } else if (hash === 'report-bug' || hash === 'bug') {
+            activateTab('tab-bug');
+        }
+    }
+
+    window.addEventListener('hashchange', checkHash);
+    checkHash();
+
+    // ── FAQ Accordion Toggle ──
+    const accordions = document.querySelectorAll('.cl-faq-card');
+    accordions.forEach(card => {
+        const trigger = card.querySelector('.cl-faq-card__trigger');
+        const content = card.querySelector('.cl-faq-card__content');
+
+        trigger.addEventListener('click', () => {
+            const isOpen = card.classList.toggle('is-open');
+            trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            
+            if (isOpen) {
+                content.style.maxHeight = content.scrollHeight + 'px';
+            } else {
+                content.style.maxHeight = '0px';
+            }
+        });
+    });
+
+    // ── Telemetry Diagnostics Auto-Population ──
+    function getOS() {
+        const userAgent = window.navigator.userAgent;
+        const platform = window.navigator.platform;
+        const macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
+        const windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
+        const iosPlatforms = ['iPhone', 'iPad', 'iPod'];
+        if (macosPlatforms.indexOf(platform) !== -1) return 'macOS';
+        if (iosPlatforms.indexOf(platform) !== -1) return 'iOS';
+        if (windowsPlatforms.indexOf(platform) !== -1) return 'Windows';
+        if (/Android/.test(userAgent)) return 'Android';
+        if (/Linux/.test(platform)) return 'Linux';
+        return 'Unknown OS';
+    }
+
+    function getBrowser() {
+        const ua = navigator.userAgent;
+        let tem, M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+        if (/trident/i.test(M[1])) {
+            tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+            return 'IE ' + (tem[1] || '');
+        }
+        if (M[1] === 'Chrome') {
+            tem = ua.match(/\b(OPR|Edge)\/(\d+)/);
+            if (tem != null) return tem.slice(1).join(' ').replace('OPR', 'Opera');
+        }
+        M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
+        if ((tem = ua.match(/version\/(\d+)/i)) != null) M.splice(1, 1, tem[1]);
+        return M.join(' ');
+    }
+
+    const diagnosticsData = {
+        os: getOS(),
+        browser: getBrowser(),
+        screen: window.screen.width + 'x' + window.screen.height,
+        timezone: 'UTC' + (new Date().getTimezoneOffset() / -60 >= 0 ? '+' : '') + (new Date().getTimezoneOffset() / -60),
+        localTime: new Date().toLocaleString()
+    };
+
+    const diagOS = document.getElementById('diagOS');
+    const diagBrowser = document.getElementById('diagBrowser');
+    const diagScreen = document.getElementById('diagScreen');
+    const diagTimezone = document.getElementById('diagTimezone');
+    const diagLocalTime = document.getElementById('diagLocalTime');
+
+    if (diagOS) diagOS.textContent = diagnosticsData.os;
+    if (diagBrowser) diagBrowser.textContent = diagnosticsData.browser;
+    if (diagScreen) diagScreen.textContent = diagnosticsData.screen;
+    if (diagTimezone) diagTimezone.textContent = diagnosticsData.timezone;
+    if (diagLocalTime) diagLocalTime.textContent = diagnosticsData.localTime;
+    
+    function updateDiagnosticsValue() {
+        const checked = document.getElementById('includeTelemetry').checked;
+        const input = document.getElementById('bugDiagnostics');
+        if (input) {
+            if (checked) {
+                input.value = JSON.stringify(diagnosticsData, null, 2);
+            } else {
+                input.value = 'User opted out of sharing telemetry diagnostics.';
+            }
+        }
+    }
+
+    const includeTelemetryCheck = document.getElementById('includeTelemetry');
+    if (includeTelemetryCheck) {
+        updateDiagnosticsValue();
+    }
+
+    window.toggleTelemetryInclude = function() {
+        updateDiagnosticsValue();
+    };
+
+    // ── Severity Chip Selection ──
+    window.selectSeverity = function(severity) {
+        document.querySelectorAll('.cl-severity-chip').forEach(chip => {
+            const active = chip.dataset.severity === severity;
+            chip.classList.toggle('is-active', active);
+            const radio = chip.querySelector('input[type="radio"]');
+            if (radio && active) {
+                radio.checked = true;
+            }
+        });
+    };
+
+    // ── Input Character Counters ──
+    const bugSteps = document.getElementById('bugSteps');
+    const stepsCounter = document.getElementById('stepsCounter');
+    if (bugSteps && stepsCounter) {
+        bugSteps.addEventListener('input', () => {
+            const count = bugSteps.value.length;
+            stepsCounter.textContent = `${count} / 500`;
+            stepsCounter.classList.toggle('is-warning', count > 400);
+            stepsCounter.classList.toggle('is-max', count >= 500);
+        });
+    }
+
+    const bugDescription = document.getElementById('bugDescription');
+    const descCounter = document.getElementById('descCounter');
+    if (bugDescription && descCounter) {
+        bugDescription.addEventListener('input', () => {
+            const count = bugDescription.value.length;
+            descCounter.textContent = `${count} / 1000`;
+            descCounter.classList.toggle('is-warning', count > 800);
+            descCounter.classList.toggle('is-max', count >= 1000);
+        });
+    }
+
+    // ── Drag & Drop Screen mock attachments ──
+    const dragZone = document.getElementById('bugDragZone');
+    const filePreviews = document.getElementById('bugFilePreviews');
+    let attachedFiles = [];
+
+    if (dragZone) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dragZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dragZone.classList.add('is-dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dragZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dragZone.classList.remove('is-dragover');
+            }, false);
+        });
+
+        dragZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleBugFileSelection(files);
+        }, false);
+    }
+
+    window.handleBugFileSelection = function(files) {
+        for (let i = 0; i < files.length; i++) {
+            const f = files[i];
+            if (f.size > 5 * 1024 * 1024) {
+                alert(`File ${f.name} exceeds the 5MB size limit.`);
+                continue;
+            }
+            attachedFiles.push(f);
+        }
+        renderFilePreviews();
+    };
+
+    function renderFilePreviews() {
+        if (!filePreviews) return;
+        filePreviews.innerHTML = '';
+        attachedFiles.forEach((f, idx) => {
+            const sizeKB = (f.size / 1024).toFixed(1);
+            const item = document.createElement('div');
+            item.className = 'cl-file-preview-item';
+            item.innerHTML = `
+                <div style="display:flex; align-items:center; gap:0.4rem">
+                    <i class="fa-solid fa-file-circle-check"></i>
+                    <span><strong>${escapeHTML(f.name)}</strong> (${sizeKB} KB)</span>
+                </div>
+                <span class="cl-file-remove" onclick="removeBugFile(${idx})">&times;</span>
+            `;
+            filePreviews.appendChild(item);
+        });
+    }
+
+    window.removeBugFile = function(idx) {
+        attachedFiles.splice(idx, 1);
+        renderFilePreviews();
+    };
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+    }
+})();
+</script>
+{% endblock %}

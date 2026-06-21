@@ -1,0 +1,204 @@
+<div class="cl-about-container {% if not user.is_authenticated %}cl-about-container--landing{% endif %}" data-reveal>
+    
+    <!-- Hero Block -->
+    <header class="cl-about-hero">
+        <h2>Static Analysis Driven by AI & Heuristics</h2>
+        <p>CodeLens combines traditional deterministic compiler analysis with modern large language models to construct a comprehensive evaluation of Python software architecture, OOP patterns, and anti-patterns.</p>
+    </header>
+
+    <!-- 4 Pillars of CodeLens Engine -->
+    <section>
+        <h2 style="font-family: var(--cl-font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: 1.25rem;">The 4 Pillars of CodeLens Engine</h2>
+        <div class="cl-about-grid">
+            
+            <!-- Pillar 1: AST Parser -->
+            <article class="cl-about-card">
+                <div class="cl-about-card__icon">
+                    <i class="fa-solid fa-diagram-project"></i>
+                </div>
+                <h3>Deterministic AST Compilation</h3>
+                <p>The code editor performs live lexical syntax evaluation by compiling Python source code directly into an Abstract Syntax Tree (AST). This isolates syntactic errors, unclosed scopes, and indentation failures before processing starts.</p>
+                <div class="cl-about-card__tags">
+                    <span class="cl-about-tag">ast module</span>
+                    <span class="cl-about-tag">Syntax Validation</span>
+                </div>
+            </article>
+
+            <!-- Pillar 2: OOP Concept Inspector -->
+            <article class="cl-about-card">
+                <div class="cl-about-card__icon">
+                    <i class="fa-solid fa-cubes"></i>
+                </div>
+                <h3>OOP Concept Inspector</h3>
+                <p>A custom AST NodeVisitor inspects class architectures. It maps class inheritances, method signatures, visibility types (public, protected, private), and object interfaces to build a full model of the OOP configuration.</p>
+                <div class="cl-about-card__tags">
+                    <span class="cl-about-tag">Inheritance Trees</span>
+                    <span class="cl-about-tag">Method Mapping</span>
+                    <span class="cl-about-tag">Polymorphism</span>
+                </div>
+            </article>
+
+            <!-- Pillar 3: Smell Detector -->
+            <article class="cl-about-card">
+                <div class="cl-about-card__icon">
+                    <i class="fa-solid fa-wind"></i>
+                </div>
+                <h3>ML & Heuristic Smell Detection</h3>
+                <p>Integrates a custom Random Forest machine learning classifier to predict software defects based on code features, complemented by heuristics identifying God Functions, Spaghetti Complexity, and Magic Numbers.</p>
+                <div class="cl-about-card__tags">
+                    <span class="cl-about-tag">Random Forest ML</span>
+                    <span class="cl-about-tag">Defect Predictor</span>
+                    <span class="cl-about-tag">AST Heuristics</span>
+                </div>
+            </article>
+
+            <!-- Pillar 4: AI Surgeon Tutor -->
+            <article class="cl-about-card">
+                <div class="cl-about-card__icon">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <h3>AI Refactoring Pipeline</h3>
+                <p>Code containing design anomalies is parsed and passed to the Hugging Face AI pipeline running Qwen2.5-Coder. The AI system generates optimal refactoring choices, demonstrating how to align source code with clean SOLID design rules.</p>
+                <div class="cl-about-card__tags">
+                    <span class="cl-about-tag">Qwen2.5-Coder-32B</span>
+                    <span class="cl-about-tag">SOLID Design</span>
+                    <span class="cl-about-tag">Hugging Face API</span>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+    <!-- Interactive Visual Flow -->
+    <section class="cl-flow-section">
+        <h3><i class="fa-solid fa-route" style="color:var(--cl-primary)"></i> Code Analysis Lifecycle</h3>
+        <p style="color:var(--cl-text-muted); font-size:0.9rem; margin:0">Follow the path your Python scripts travel as they are compiled and parsed from plain text to beautiful dashboards:</p>
+        
+        <div class="cl-flow-pipeline">
+            
+            <div class="cl-flow-step">
+                <span class="cl-flow-step__num">1</span>
+                <h4>Source Submission</h4>
+                <p>Input raw Python code via paste, file upload, or importing public/private GitHub and Gist URLs.</p>
+            </div>
+            
+            <div class="cl-flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            
+            <div class="cl-flow-step">
+                <span class="cl-flow-step__num">2</span>
+                <h4>AST Compilation</h4>
+                <p>Build the abstract syntax trees, identifying structural tokens, syntax metrics, and function footprints.</p>
+            </div>
+            
+            <div class="cl-flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            
+            <div class="cl-flow-step">
+                <span class="cl-flow-step__num">3</span>
+                <h4>ML Defect & Smell Prediction</h4>
+                <p>Extract OOP structures and complexity heuristics via AST, then feed quantitative metrics (such as class and function counts) to a balanced Random Forest Classifier to predict defect probabilities.</p>
+            </div>
+            
+            <div class="cl-flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            
+            <div class="cl-flow-step">
+                <span class="cl-flow-step__num">4</span>
+                <h4>Generative AI Fix</h4>
+                <p>Query Hugging Face APIs asynchronously to build clean-code alternatives and explanations.</p>
+            </div>
+            
+            <div class="cl-flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            
+            <div class="cl-flow-step" style="border-color:var(--cl-primary)">
+                <span class="cl-flow-step__num">5</span>
+                <h4>Interactive Insights</h4>
+                <p>Render interactive glassmorphic charts, drill down into code details, and review starred history.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Technical Stack details -->
+    <section class="cl-flow-section">
+        <h3><i class="fa-solid fa-microchip" style="color:var(--cl-primary)"></i> Built on robust frameworks</h3>
+        <div class="cl-stack-grid">
+            <div class="cl-stack-item">
+                <i class="fa-brands fa-python"></i>
+                <span>Python AST</span>
+                <p>Pure Python compilation and grammar parsing</p>
+            </div>
+            <div class="cl-stack-item">
+                <i class="fa-brands fa-envira"></i>
+                <span>Django Framework</span>
+                <p>Secure authentication and relational persistence</p>
+            </div>
+            <div class="cl-stack-item">
+                <i class="fa-solid fa-gears"></i>
+                <span>Scikit-Learn ML</span>
+                <p>Balanced Random Forest software defect classifier</p>
+            </div>
+            <div class="cl-stack-item">
+                <i class="fa-solid fa-database"></i>
+                <span>Strict 3NF Schema</span>
+                <p>Zero-redundancy storage for reports & history</p>
+            </div>
+            <div class="cl-stack-item">
+                <i class="fa-solid fa-brain"></i>
+                <span>Hugging Face LLM</span>
+                <p>Modern coding tutor models via tokenized APIs</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Meet the Team -->
+    <section class="cl-team-section">
+        <h2 style="font-family: var(--cl-font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--cl-text);">Meet the Team</h2>
+        <div class="cl-team-grid">
+            <!-- Ali Arshad -->
+            <article class="cl-team-card">
+                <div class="cl-team-card__avatar">AA</div>
+                <h4>Ali Arshad</h4>
+                <p>Software Engineer</p>
+            </article>
+
+            <!-- Sohaib Riaz -->
+            <article class="cl-team-card">
+                <div class="cl-team-card__avatar">SR</div>
+                <h4>Sohaib Riaz</h4>
+                <p>Software Engineer</p>
+            </article>
+
+            <!-- Fawad ul Hassan -->
+            <article class="cl-team-card">
+                <div class="cl-team-card__avatar">FH</div>
+                <h4>Fawad ul Hassan</h4>
+                <p>Software Engineer</p>
+            </article>
+        </div>
+    </section>
+
+    <!-- Project Supervision & Institutional Support -->
+    <section class="cl-team-section" style="margin-top: 2rem;">
+        <h2 style="font-family: var(--cl-font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--cl-text);">Project Supervision & Institutional Support</h2>
+        <div class="cl-support-grid">
+            
+            <!-- Ms. Noushin Mazhar -->
+            <article class="cl-support-card">
+                <span class="cl-support-badge">Project Supervision</span>
+                <h4>Ms. Noushin Mazhar</h4>
+                <p class="cl-support-card__subtitle">Project Supervisor</p>
+                <p class="cl-support-card__dept">Department of Software Engineering</p>
+                <p>Provided critical academic guidance, technical oversight, and architectural validation throughout the research, development, and testing phases of the CodeLens pipeline.</p>
+            </article>
+
+            <!-- Foundation University -->
+            <article class="cl-support-card">
+                <span class="cl-support-badge">Institutional Backing</span>
+                <h4>Foundation University, Rawalpindi</h4>
+                <p class="cl-support-card__subtitle">Institutional Backing</p>
+                <p class="cl-support-card__dept">Department of Software Engineering</p>
+                <p>CodeLens was developed as a flagship Final Year Project (FYP) within the Department of Software Engineering, representing the culmination of rigorous academic training and modern software practices.</p>
+            </article>
+
+        </div>
+    </section>
+</div>

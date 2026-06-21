@@ -1,0 +1,600 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analyzer — CodeLens{% endblock %}
+{% block body_class %}layout-app{% endblock %}
+
+{% block topbar_heading %}Python Analyzer{% endblock %}
+{% block topbar_subtitle %}<p>Paste Python code, upload a file, or fetch directly from GitHub / Gist</p>{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Analyzer tabs ── */
+.cl-analyzer-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+.cl-analyzer-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.1rem;
+    border: 1.5px solid var(--cl-border);
+    border-radius: var(--cl-radius-sm);
+    background: var(--cl-surface);
+    color: var(--cl-text-muted);
+    font-family: var(--cl-font);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.22s ease;
+}
+.cl-analyzer-tab:hover {
+    border-color: var(--cl-primary);
+    color: var(--cl-primary);
+}
+.cl-analyzer-tab.is-active {
+    background: var(--cl-gradient);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(124,58,237,0.3);
+}
+
+/* ── GitHub panel body ── */
+.cl-github-body {
+    padding: 1.5rem;
+    background: #1e1e24;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.cl-github-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+.cl-github-field label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #a1a1aa;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.cl-github-optional {
+    font-weight: 400;
+    color: #52525b;
+    font-size: 0.75rem;
+}
+.cl-github-field input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 1.5px solid #3f3f46;
+    border-radius: 10px;
+    background: #09090b;
+    color: #e4e4e7;
+    font-family: var(--cl-font-mono);
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.cl-github-field input:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
+}
+.cl-github-field input::placeholder {
+    color: #52525b;
+}
+.cl-github-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    background: rgba(124,58,237,0.08);
+    border: 1px solid rgba(124,58,237,0.2);
+    color: #a78bfa;
+    font-size: 0.83rem;
+    line-height: 1.5;
+}
+.cl-github-info i { margin-top: 0.1rem; flex-shrink: 0; }
+.cl-github-filelist {
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    background: rgba(34,197,94,0.06);
+    border: 1px solid rgba(34,197,94,0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.cl-github-filelist__label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #22c55e;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+#githubFileItems {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.35rem;
+}
+.cl-github-file-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--cl-font-mono);
+    font-size: 0.8rem;
+    color: #d4d4d8;
+}
+.cl-github-file-item i { color: #22c55e; font-size: 0.7rem; }
+.cl-github-status {
+    font-size: 0.82rem;
+    color: #a1a1aa;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.cl-github-status.is-loading { color: #a78bfa; }
+.cl-github-status.is-error   { color: #f87171; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cl-editor-section" data-reveal>
+    <!-- ── Input Mode Tabs ── -->
+    <div class="cl-analyzer-tabs" role="tablist" aria-label="Input mode">
+        <button type="button" class="cl-analyzer-tab is-active" id="tabPaste" data-mode="paste" role="tab" aria-selected="true" aria-controls="modePaste">
+            <i class="fa-solid fa-code"></i> Code Editor
+        </button>
+        <button type="button" class="cl-analyzer-tab" id="tabGithub" data-mode="github" role="tab" aria-selected="false" aria-controls="modeGithub">
+            <i class="fa-brands fa-github"></i> GitHub / Gist URL
+        </button>
+    </div>
+
+    <!-- ── Mode: Paste Code ── -->
+    <div class="cl-editor" id="modePaste" role="tabpanel" aria-labelledby="tabPaste">
+        <div class="cl-editor__head">
+            <div class="cl-editor__dots"><span></span><span></span><span></span></div>
+            <strong>main.py</strong>
+            <div style="margin-left:auto; display:flex; gap:0.5rem">
+                <button type="button" class="cl-btn cl-btn--ghost cl-btn--sm" onclick="document.getElementById('uploadFile').click()">Upload .py</button>
+                <button type="button" id="pasteClipboardBtn" class="cl-btn cl-btn--ghost cl-btn--sm"><i class="fa-solid fa-clipboard"></i> Paste</button>
+            </div>
+        </div>
+        <input type="file" id="uploadFile" accept=".py,.txt" hidden>
+        <textarea id="codeInput" spellcheck="false"># Enter your Python code here
+def example_function():
+    pass</textarea>
+        <div class="cl-editor__foot">
+            <span>Ctrl+Enter to run analysis</span>
+            <button type="button" id="analyzeBtn" class="cl-btn cl-btn--primary">
+                <i class="fa-solid fa-magnifying-glass-chart"></i> Analyze code
+            </button>
+        </div>
+    </div>
+
+    <!-- ── Mode: GitHub / Gist URL ── -->
+    <div class="cl-editor cl-github-panel" id="modeGithub" role="tabpanel" aria-labelledby="tabGithub" hidden>
+        <div class="cl-editor__head">
+            <div class="cl-editor__dots"><span></span><span></span><span></span></div>
+            <strong>GitHub / Gist Import</strong>
+        </div>
+        <div class="cl-github-body">
+            <div class="cl-github-field">
+                <label for="githubUrl"><i class="fa-brands fa-github"></i> Repository or Gist URL</label>
+                <input
+                    type="url"
+                    id="githubUrl"
+                    placeholder="https://github.com/owner/repo  or  https://gist.github.com/user/gist_id"
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+            </div>
+            <div class="cl-github-field cl-github-field--token">
+                <label for="githubToken"><i class="fa-solid fa-key"></i> GitHub Token <span class="cl-github-optional">(optional — needed for private repos)</span></label>
+                <input
+                    type="password"
+                    id="githubToken"
+                    placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                    autocomplete="off"
+                >
+            </div>
+            <div class="cl-github-info">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>CodeLens will fetch up to <strong>10 Python files</strong> from the repo root and analyze them as a single project.</span>
+            </div>
+            <div class="cl-github-filelist" id="githubFileList" hidden>
+                <span class="cl-github-filelist__label"><i class="fa-solid fa-folder-open"></i> Files to analyze:</span>
+                <div id="githubFileItems"></div>
+            </div>
+        </div>
+        <div class="cl-editor__foot">
+            <span id="githubStatus" class="cl-github-status"></span>
+            <button type="button" id="analyzGithubBtn" class="cl-btn cl-btn--primary">
+                <i class="fa-brands fa-github"></i> Fetch &amp; Analyze
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Paste / upload mode elements ──
+const uploadFile = document.getElementById('uploadFile');
+const codeInput  = document.getElementById('codeInput');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const pasteClipboardBtn = document.getElementById('pasteClipboardBtn');
+
+// ── Tab switching ──
+document.querySelectorAll('.cl-analyzer-tab').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const mode = this.dataset.mode;
+        document.querySelectorAll('.cl-analyzer-tab').forEach(b => {
+            b.classList.remove('is-active');
+            b.setAttribute('aria-selected', 'false');
+        });
+        this.classList.add('is-active');
+        this.setAttribute('aria-selected', 'true');
+
+        document.getElementById('modePaste').hidden  = mode !== 'paste';
+        document.getElementById('modeGithub').hidden = mode !== 'github';
+    });
+});
+
+if (pasteClipboardBtn) {
+    pasteClipboardBtn.addEventListener('click', async function () {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (text && text.trim()) {
+                codeInput.value = text;
+            } else {
+                alert('Clipboard is empty or does not contain text.');
+            }
+        } catch (err) {
+            alert('Cannot access clipboard. Please use Ctrl+V to paste your code manually.');
+        }
+    });
+}
+
+uploadFile.addEventListener('change', function () {
+    const f = this.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = e => { codeInput.value = e.target.result; };
+    r.readAsText(f);
+});
+
+codeInput.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyzeBtn.click();
+});
+
+analyzeBtn.addEventListener('click', function () {
+    if (!codeInput.value.trim()) return;
+    {% if not user.is_authenticated %}
+    alert('Please sign in to analyze code.');
+    location.href = "{% url 'login' %}";
+    return;
+    {% endif %}
+    
+    // Client-side syntax validation check if enabled
+    const isSyntaxCheckEnabled = localStorage.getItem('cl-syntax-check') !== 'false';
+    if (isSyntaxCheckEnabled) {
+        const code = codeInput.value;
+        
+        // Robust state-machine bracket pre-check skipping comments and strings
+        const checkBrackets = function(code) {
+            const stack = [];
+            const opening = '([{';
+            const closing = ')]}';
+            const pairs = { ')': '(', ']': '[', '}': '{' };
+            let i = 0;
+            
+            while (i < code.length) {
+                // Triple double quotes
+                if (code.startsWith('"""', i)) {
+                    i += 3;
+                    while (i < code.length && !code.startsWith('"""', i)) {
+                        if (code[i] === '\\') i += 2;
+                        else i++;
+                    }
+                    i += 3;
+                    continue;
+                }
+                // Triple single quotes
+                if (code.startsWith("'''", i)) {
+                    i += 3;
+                    while (i < code.length && !code.startsWith("'''", i)) {
+                        if (code[i] === '\\') i += 2;
+                        else i++;
+                    }
+                    i += 3;
+                    continue;
+                }
+                // Double quotes string
+                if (code[i] === '"') {
+                    i++;
+                    while (i < code.length && code[i] !== '"') {
+                        if (code[i] === '\\') i += 2;
+                        else i++;
+                    }
+                    i++;
+                    continue;
+                }
+                // Single quote string
+                if (code[i] === "'") {
+                    i++;
+                    while (i < code.length && code[i] !== "'") {
+                        if (code[i] === '\\') i += 2;
+                        else i++;
+                    }
+                    i++;
+                    continue;
+                }
+                // Comments
+                if (code[i] === '#') {
+                    i++;
+                    while (i < code.length && code[i] !== '\n' && code[i] !== '\r') {
+                        i++;
+                    }
+                    continue;
+                }
+                
+                // Normal code character
+                const char = code[i];
+                if (opening.includes(char)) {
+                    stack.push({ char: char, index: i });
+                } else if (closing.includes(char)) {
+                    const expectedOpening = pairs[char];
+                    if (stack.length === 0) {
+                        return { error: true, char: char, index: i };
+                    }
+                    const last = stack.pop();
+                    if (last.char !== expectedOpening) {
+                        return { error: true, char: char, index: i };
+                    }
+                }
+                i++;
+            }
+            
+            if (stack.length > 0) {
+                const last = stack.pop();
+                return { error: true, char: last.char, index: last.index };
+            }
+            
+            return { error: false };
+        };
+        
+        const result = checkBrackets(code);
+        if (result.error) {
+            const lines = code.substring(0, result.index).split('\n');
+            const lineNum = lines.length;
+            
+            if (typeof window.playSynthSound === 'function') {
+                window.playSynthSound('warning');
+            }
+            
+            window.CodeLens.confirm({
+                title: '⚠️ LOCAL COMPILER PRE-CHECK WARNING',
+                message: `Unbalanced brackets detected in your Python code on line ${lineNum} (e.g. unmatched '${result.char}').\n\nWould you like to proceed with the analysis anyway?`,
+                confirmText: 'Proceed Anyway',
+                cancelText: 'Cancel',
+                variant: 'warning',
+                onConfirm: performAnalysis
+            });
+            return;
+        }
+    }
+
+    performAnalysis();
+});
+
+function performAnalysis() {
+    analyzeBtn.disabled = true;
+    analyzeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing…';
+    
+    const aiModel = localStorage.getItem('cl-ai-model') || 'qwen-32b';
+    const refactorLevel = localStorage.getItem('cl-refactor-level') || 'balanced';
+    const smellsThreshold = localStorage.getItem('cl-smells-threshold') || 'verbose';
+
+    fetch("{% url 'analyze' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({
+            code: codeInput.value,
+            ai_model: aiModel,
+            refactor_level: refactorLevel,
+            smells_threshold: smellsThreshold
+        })
+    })
+    .then(r => {
+        if (r.redirected || r.url.includes('/login/')) {
+            alert('Your session has expired. Redirecting to login page...');
+            location.href = "{% url 'login' %}?next=" + encodeURIComponent(location.pathname);
+            throw new Error('Redirected to login');
+        }
+        if (!r.ok) {
+            return r.text().then(text => {
+                let errMsg = 'Server error. Please try again.';
+                try {
+                    const parsed = JSON.parse(text);
+                    if (parsed.error) errMsg = parsed.error;
+                } catch(e) {}
+                throw new Error(errMsg);
+            });
+        }
+        return r.json();
+    })
+    .then(d => {
+        if (d.success) {
+            if (typeof window.playSynthSound === 'function') {
+                window.playSynthSound('success');
+            }
+            location.href = "{% url 'functionalities' %}?id=" + d.analysis_id;
+        } else {
+            if (typeof window.playSynthSound === 'function') {
+                window.playSynthSound('error');
+            }
+            alert(d.error || 'Error');
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i> Analyze code';
+        }
+    })
+    .catch(err => {
+        if (err.message !== 'Redirected to login') {
+            if (typeof window.playSynthSound === 'function') {
+                window.playSynthSound('error');
+            }
+            alert(err.message || 'An unexpected error occurred. Please try again.');
+        }
+        analyzeBtn.disabled = false;
+        analyzeBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i> Analyze code';
+    });
+}
+
+// ── GitHub / Gist mode ──
+const analyzGithubBtn = document.getElementById('analyzGithubBtn');
+const githubStatus    = document.getElementById('githubStatus');
+const githubFileList  = document.getElementById('githubFileList');
+const githubFileItems = document.getElementById('githubFileItems');
+
+analyzGithubBtn.addEventListener('click', function () {
+    const url   = document.getElementById('githubUrl').value.trim();
+    const token = document.getElementById('githubToken').value.trim();
+
+    if (!url) {
+        setStatus('error', '<i class="fa-solid fa-triangle-exclamation"></i> Please enter a GitHub URL.');
+        return;
+    }
+
+    {% if not user.is_authenticated %}
+    alert('Please sign in to analyze code.');
+    location.href = "{% url 'login' %}";
+    return;
+    {% endif %}
+
+    analyzGithubBtn.disabled = true;
+    analyzGithubBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Fetching…';
+    setStatus('loading', '<i class="fa-solid fa-spinner fa-spin"></i> Fetching Python files from GitHub…');
+    githubFileList.hidden = true;
+
+    const aiModel = localStorage.getItem('cl-ai-model') || 'qwen-32b';
+    const refactorLevel = localStorage.getItem('cl-refactor-level') || 'balanced';
+    const smellsThreshold = localStorage.getItem('cl-smells-threshold') || 'verbose';
+
+    fetch("{% url 'analyze_github' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({
+            url,
+            token,
+            ai_model: aiModel,
+            refactor_level: refactorLevel,
+            smells_threshold: smellsThreshold
+        })
+    })
+    .then(r => {
+        if (r.redirected || r.url.includes('/login/')) {
+            alert('Your session has expired. Redirecting to login page...');
+            location.href = "{% url 'login' %}?next=" + encodeURIComponent(location.pathname);
+            throw new Error('Redirected to login');
+        }
+        if (!r.ok) {
+            return r.text().then(text => {
+                let errMsg = 'Server error. Please try again.';
+                try {
+                    const parsed = JSON.parse(text);
+                    if (parsed.error) errMsg = parsed.error;
+                } catch(e) {}
+                throw new Error(errMsg);
+            });
+        }
+        return r.json();
+    })
+    .then(d => {
+        if (d.success) {
+            if (typeof window.playSynthSound === 'function') {
+                window.playSynthSound('success');
+            }
+            // Show file list briefly before redirecting
+            const paths = d.file_paths ? d.file_paths.split(', ') : [];
+            githubFileItems.innerHTML = paths.map(p =>
+                `<div class="cl-github-file-item"><i class="fa-solid fa-check-circle"></i>${p}</div>`
+            ).join('');
+            githubFileList.hidden = false;
+            setStatus('loading', `<i class="fa-solid fa-spinner fa-spin"></i> Analyzed ${d.files_analyzed} file(s). Redirecting…`);
+            setTimeout(() => {
+                location.href = "{% url 'functionalities' %}?id=" + d.analysis_id;
+            }, 1200);
+        } else {
+            if (typeof window.playSynthSound === 'function') {
+                window.playSynthSound('error');
+            }
+            setStatus('error', `<i class="fa-solid fa-circle-xmark"></i> ${d.error || 'Unknown error'}`);
+            analyzGithubBtn.disabled = false;
+            analyzGithubBtn.innerHTML = '<i class="fa-brands fa-github"></i> Fetch &amp; Analyze';
+        }
+    })
+    .catch(err => {
+        if (err.message !== 'Redirected to login') {
+            if (typeof window.playSynthSound === 'function') {
+                window.playSynthSound('error');
+            }
+            setStatus('error', `<i class="fa-solid fa-circle-xmark"></i> ${err.message || 'Network error. Please try again.'}`);
+        }
+        analyzGithubBtn.disabled = false;
+        analyzGithubBtn.innerHTML = '<i class="fa-brands fa-github"></i> Fetch &amp; Analyze';
+    });
+});
+
+function applyEditorSettings() {
+    const codeInput = document.getElementById('codeInput');
+    if (!codeInput) return;
+
+    const font = localStorage.getItem('cl-code-font') || 'JetBrains Mono';
+    const size = localStorage.getItem('cl-code-fontsize') || '14px';
+    const tabSize = localStorage.getItem('cl-code-tabwidth') || '4';
+
+    codeInput.style.fontFamily = `"${font}", var(--cl-font-mono), monospace`;
+    codeInput.style.fontSize = size;
+    codeInput.style.tabSize = tabSize;
+    codeInput.style.mozTabSize = tabSize;
+}
+
+function initDraftAutoSave() {
+    const codeInput = document.getElementById('codeInput');
+    if (!codeInput) return;
+
+    const autoSaveEnabled = localStorage.getItem('cl-pref-auto-save') === 'true';
+    if (autoSaveEnabled) {
+        // Restore from localStorage draft if it exists
+        const draft = localStorage.getItem('cl-editor-draft');
+        if (draft !== null) {
+            codeInput.value = draft;
+        }
+
+        // Add auto-save change listener
+        codeInput.addEventListener('input', () => {
+            localStorage.setItem('cl-editor-draft', codeInput.value);
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    applyEditorSettings();
+    initDraftAutoSave();
+});
+
+function setStatus(type, html) {
+    githubStatus.className = 'cl-github-status' + (type ? ' is-' + type : '');
+    githubStatus.innerHTML = html;
+}
+</script>
+{% endblock %}

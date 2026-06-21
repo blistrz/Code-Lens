@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}History — CodeLens{% endblock %}
+{% block topbar_heading %}My Analysis History{% endblock %}
+{% block topbar_subtitle %}<p>{{ total_count }} saved · {{ starred_count }} starred — click any entry to preview results</p>{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/pages/premium.css' %}?build=20260519v2">
+<style>
+/* ── Beginner-friendly history item badges ── */
+.hi-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+    flex-wrap: wrap;
+}
+.hi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.18rem 0.5rem;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+.hi-badge--health-great  { background: rgba(5,150,105,0.12); color: #059669; border: 1px solid rgba(5,150,105,0.25); }
+.hi-badge--health-good   { background: rgba(37,99,235,0.10); color: #2563eb; border: 1px solid rgba(37,99,235,0.2); }
+.hi-badge--health-fair   { background: rgba(217,119,6,0.12); color: #d97706; border: 1px solid rgba(217,119,6,0.25); }
+.hi-badge--health-poor   { background: rgba(220,38,38,0.10); color: #dc2626; border: 1px solid rgba(220,38,38,0.2); }
+.hi-badge--errors { background: rgba(220,38,38,0.08); color: #dc2626; border: 1px solid rgba(220,38,38,0.15); }
+.hi-badge--smells { background: rgba(217,119,6,0.08); color: #b45309; border: 1px solid rgba(217,119,6,0.18); }
+.hi-badge--clean  { background: rgba(5,150,105,0.08); color: #059669; border: 1px solid rgba(5,150,105,0.15); }
+
+/* hint text under the panel head */
+.history-panel-hint {
+    padding: 0.5rem 1.15rem 0.75rem;
+    font-size: 0.73rem;
+    color: var(--cl-text-subtle);
+    border-bottom: 1px solid var(--cl-border);
+    line-height: 1.45;
+}
+/* beginner tip in empty detail panel */
+.beginner-tip {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--cl-radius-sm);
+    background: var(--cl-primary-soft);
+    border: 1px solid rgba(124,58,237,0.2);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--cl-text);
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.beginner-tip strong { color: var(--cl-primary); }
+
+/* ── Hover-reveal single history delete button ── */
+.history-item {
+    position: relative;
+}
+.history-item__delete {
+    position: absolute;
+    top: 50%;
+    right: 0.85rem;
+    transform: translateY(-50%) scale(0.8);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    background: rgba(220, 38, 38, 0.08);
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease-in-out;
+    z-index: 10;
+}
+.history-item:hover .history-item__delete {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+    pointer-events: auto;
+}
+.history-item:hover .history-item__star {
+    opacity: 0 !important;
+    transform: scale(0.5);
+}
+.history-item__delete:hover {
+    background: #dc2626;
+    color: #fff !important;
+    border-color: #dc2626;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+{{ history_previews|json_script:"history-previews-data" }}
+<section class="history-studio">
+    <div class="history-toolbar">
+        <form method="GET" class="history-search-wrap">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input type="text" name="search" placeholder="Search by class or function name…" value="{{ search }}" autocomplete="off">
+            {% if filter_type != 'all' %}<input type="hidden" name="filter" value="{{ filter_type }}">{% endif %}
+        </form>
+
+        <div class="history-filters" role="group" aria-label="Filter history">
+            <a href="?search={{ search|urlencode }}" class="history-filter{% if filter_type == 'all' %} is-active{% endif %}">
+                <i class="fa-solid fa-list"></i> All
+            </a>
+            <a href="?filter=starred&search={{ search|urlencode }}" class="history-filter{% if filter_type == 'starred' %} is-active{% endif %}">
+                <i class="fa-solid fa-star"></i> Starred
+            </a>
+        </div>
+    </div>
+
+    <div class="history-split">
+        <aside class="history-list-panel">
+            <div class="history-list-panel__head">
+                <i class="fa-solid fa-file-invoice" style="margin-right:0.4rem;color:var(--cl-primary)"></i>
+                Analysis Reports &nbsp;·&nbsp; Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages|default:1 }}
+            </div>
+            <div class="history-panel-hint">
+                🎓 Each report card shows your code's health score, errors found, and code smells. <strong>Click any report</strong> to see a full preview.
+            </div>
+            <div class="history-scroll">
+                {% for history in page_obj %}
+                {% with preview=history_previews|default_if_none:"" %}
+                <article
+                    class="history-item{% if history.is_starred %} is-starred{% endif %}"
+                    data-id="{{ history.analysis.id }}"
+                    role="button"
+                    tabindex="0"
+                    title="Click to preview this analysis"
+                    onclick="loadAnalysis({{ history.analysis.id }}, this)"
+                    onkeydown="if(event.key==='Enter')loadAnalysis({{ history.analysis.id }}, this)"
+                >
+                    <span class="history-item__rail" aria-hidden="true"></span>
+                    <div style="min-width:0;flex:1">
+                        <p class="history-item__title">{{ history.title|default:"Untitled analysis" }}</p>
+                        <p class="history-item__meta">{{ history.created_at|timesince }} ago</p>
+                        {# Inline badges rendered from the embedded previews via JS — fallback placeholders shown on first render #}
+                        <div class="hi-badges" id="badges-{{ history.analysis.id }}">
+                            <span class="hi-badge hi-badge--health-fair" style="opacity:0.4"><i class="fa-solid fa-heart-pulse"></i> …</span>
+                        </div>
+                    </div>
+                    <span class="history-item__star{% if history.is_starred %} is-visible{% endif %}" aria-label="Starred">
+                        <i class="fa-solid fa-star"></i>
+                    </span>
+                    <button type="button" class="history-item__delete" aria-label="Delete chat" onclick="deleteHistoryEntry({{ history.id }}, event, this)">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                </article>
+                {% endwith %}
+                {% empty %}
+                <div class="empty-state-premium" style="margin:1rem;border-style:solid">
+                    <div class="empty-state-premium__icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <h3 style="font-family:var(--cl-font-display);font-size:1rem">No analyses found</h3>
+                    <p style="color:var(--cl-text-muted);font-size:0.88rem">Try another search or run a new analysis from the home page.</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if page_obj.paginator.num_pages > 1 %}
+            <nav class="history-pagination" aria-label="History pages">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&search={{ search|urlencode }}{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}"
+                   class="cl-btn cl-btn--ghost cl-btn--sm" aria-label="Previous page">
+                    <i class="fa-solid fa-chevron-left"></i> Prev
+                </a>
+                {% endif %}
+                <span style="font-size:0.8rem;font-weight:600;color:var(--cl-text-muted)">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&search={{ search|urlencode }}{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}"
+                   class="cl-btn cl-btn--ghost cl-btn--sm" aria-label="Next page">
+                    Next <i class="fa-solid fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </nav>
+            {% endif %}
+        </aside>
+
+        <article id="historyDetailPanel" class="history-detail-panel">
+            <div id="historyDetailContent" class="history-detail__content">
+                <div class="empty-state-premium" style="border:none;background:transparent;box-shadow:none">
+                    <div class="empty-state-premium__icon"><i class="fa-solid fa-file-lines"></i></div>
+                    <h3 style="font-family:var(--cl-font-display);margin-bottom:0.5rem">Select an analysis</h3>
+                    <p style="color:var(--cl-text-muted)">Choose any entry from the timeline on the left to instantly preview its results.</p>
+                    <div class="beginner-tip">
+                        <strong>💡 New here?</strong> Each analysis shows you:<br>
+                        🐛 <strong>Errors</strong> — bugs found in your code<br>
+                        🌿 <strong>Code Smells</strong> — bad habits to fix<br>
+                        🤖 <strong>AI Refactor</strong> — a cleaned-up version<br>
+                        ❤️ <strong>Health Score</strong> — overall code quality
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+</section>
+
+<!-- Custom Modal for Delete Confirmation -->
+<div id="deleteConfirmModal" class="cl-modal-overlay" style="display:none;">
+    <div class="cl-modal-content">
+        <div class="cl-modal-header">
+            <i class="fa-solid fa-triangle-exclamation" style="color:var(--cl-danger); font-size:1.35rem;"></i>
+            <h4>Delete Report</h4>
+        </div>
+        <div class="cl-modal-body">
+            <p>Are you sure you want to delete this report?</p>
+        </div>
+        <div class="cl-modal-footer">
+            <button type="button" class="cl-btn cl-btn--ghost cl-btn--sm" onclick="closeDeleteModal()">Cancel</button>
+            <button type="button" class="cl-btn cl-btn--danger cl-btn--sm" id="btnConfirmDelete">Delete</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/history-page.js' %}?build=20260519v2"></script>
+<script>
+// Populate badge chips from the embedded preview data immediately on page load
+(function () {
+    var raw = document.getElementById('history-previews-data');
+    if (!raw) return;
+    var previews;
+    try { previews = JSON.parse(raw.textContent); } catch(e) { return; }
+
+    function healthClass(score) {
+        if (score >= 85) return 'great';
+        if (score >= 65) return 'good';
+        if (score >= 45) return 'fair';
+        return 'poor';
+    }
+    function healthIcon(score) {
+        if (score >= 85) return '✅';
+        if (score >= 65) return '🟦';
+        if (score >= 45) return '🟡';
+        return '🔴';
+    }
+
+    Object.keys(previews).forEach(function (id) {
+        var p = previews[id];
+        var el = document.getElementById('badges-' + id);
+        if (!el) return;
+
+        var score = p.health_score || 0;
+        var errors = p.error_count || 0;
+        var smells = p.smell_count || 0;
+        var hc = healthClass(score);
+
+        var html = '<span class="hi-badge hi-badge--health-' + hc + '">' +
+                   healthIcon(score) + ' ' + score + '/100</span>';
+
+        if (errors > 0) {
+            html += '<span class="hi-badge hi-badge--errors"><i class="fa-solid fa-bug"></i> ' + errors + ' error' + (errors !== 1 ? 's' : '') + '</span>';
+        }
+        if (smells > 0) {
+            html += '<span class="hi-badge hi-badge--smells"><i class="fa-solid fa-triangle-exclamation"></i> ' + smells + ' smell' + (smells !== 1 ? 's' : '') + '</span>';
+        }
+        if (errors === 0 && smells === 0) {
+            html += '<span class="hi-badge hi-badge--clean"><i class="fa-solid fa-check"></i> Clean!</span>';
+        }
+
+        el.innerHTML = html;
+    });
+})();
+</script>
+{% endblock %}
+

@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — CodeLens{% endblock %}
+{% block topbar_heading %}Analytics{% endblock %}
+{% block topbar_subtitle %}<p>Your coding patterns at a glance</p>{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="cl-dash-hero" data-reveal>
+    <div>
+        <h2>Welcome, {{ user.first_name|default:"Developer"|title }}</h2>
+        <p style="color:var(--cl-text-muted)">Track smells, errors, and activity over time.</p>
+    </div>
+    <div class="cl-stat-hero">
+        <strong>{{ total_analyses }}</strong>
+        <span>Total analyses</span>
+    </div>
+</div>
+
+<div class="cl-chart-grid">
+    <article class="cl-card cl-card--hover cl-chart-box" data-reveal data-delay="1">
+        <h4><i class="fa-solid fa-biohazard" style="color:var(--cl-warning)"></i> Code smells</h4>
+        <div class="cl-chart-wrap"><canvas id="smellsChart"></canvas></div>
+    </article>
+    <article class="cl-card cl-card--hover cl-chart-box" data-reveal data-delay="2">
+        <h4><i class="fa-solid fa-bug" style="color:var(--cl-danger)"></i> Syntax errors</h4>
+        <div class="cl-chart-wrap"><canvas id="errorsChart"></canvas></div>
+    </article>
+    <article class="cl-card cl-card--hover cl-chart-box cl-chart-box--wide" data-reveal data-delay="3">
+        <h4><i class="fa-solid fa-chart-line" style="color:var(--cl-primary)"></i> Last 7 days</h4>
+        <div class="cl-chart-wrap cl-chart-wrap--tall"><canvas id="activityChart"></canvas></div>
+    </article>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const topSmells = JSON.parse('{{ top_smells_json|safe }}');
+const topErrors = JSON.parse('{{ top_errors_json|safe }}');
+const activity = JSON.parse('{{ activity_json|safe }}');
+let smellsChart, errorsChart, activityChart;
+
+function chartColors() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return {
+        muted: dark ? '#a1a1aa' : '#52525b',
+        grid: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+        tip: dark ? '#18181b' : '#18181b',
+        point: dark ? '#18181b' : '#fff',
+        line: dark ? '#a78bfa' : '#7c3aed'
+    };
+}
+
+function buildCharts() {
+    const c = chartColors();
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = c.muted;
+    if (smellsChart) smellsChart.destroy();
+    if (errorsChart) errorsChart.destroy();
+    if (activityChart) activityChart.destroy();
+
+    smellsChart = new Chart(document.getElementById('smellsChart'), {
+        type: 'doughnut',
+        data: {
+            labels: topSmells.map(s => s.smell_type),
+            datasets: [{ data: topSmells.map(s => s.count), backgroundColor: ['#7c3aed','#06b6d4','#10b981','#ef4444','#f59e0b'], borderWidth: 0 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { color: c.muted } } } }
+    });
+
+    const ctxE = document.getElementById('errorsChart').getContext('2d');
+    const g = ctxE.createLinearGradient(0, 0, 0, 260);
+    g.addColorStop(0, '#ef4444'); g.addColorStop(1, '#fca5a5');
+    errorsChart = new Chart(ctxE, {
+        type: 'bar',
+        data: { labels: topErrors.map(e => e.error_type), datasets: [{ data: topErrors.map(e => e.count), backgroundColor: g, borderRadius: 8 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: c.grid } } } }
+    });
+
+    const ctxA = document.getElementById('activityChart').getContext('2d');
+    const g2 = ctxA.createLinearGradient(0, 0, 0, 300);
+    g2.addColorStop(0, 'rgba(124,58,237,0.25)'); g2.addColorStop(1, 'rgba(124,58,237,0)');
+    activityChart = new Chart(ctxA, {
+        type: 'line',
+        data: {
+            labels: activity.map(a => a.date),
+            datasets: [{ data: activity.map(a => a.count), borderColor: c.line, backgroundColor: g2, fill: true, tension: 0.4, pointBackgroundColor: c.point, pointBorderColor: c.line, borderWidth: 3 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: c.grid } } } }
+    });
+}
+buildCharts();
+window.addEventListener('codelens-theme-change', buildCharts);
+</script>
+{% endblock %}

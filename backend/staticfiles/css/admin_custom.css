@@ -1,0 +1,8 @@
+/* ── CodeLens Admin Custom Styles ── */
+
+/* Hide the large logo on the admin login page */
+.login-logo img,
+.login-page .login-logo img,
+.login-box .login-logo img {
+    display: none !important;
+}

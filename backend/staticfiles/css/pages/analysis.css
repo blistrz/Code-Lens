@@ -1,0 +1,312 @@
+/* Analysis results page */
+
+.analysis-page {
+    display: grid;
+    gap: 1.5rem;
+    padding: 1.5rem 0 3rem;
+}
+
+.print-header {
+    display: none;
+}
+
+.page-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+}
+
+.page-toolbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
+.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.35rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    width: fit-content;
+    margin-inline: auto;
+}
+
+.tab-btn {
+    padding: 0.55rem 1.25rem;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.tab-btn:hover {
+    color: var(--color-text);
+}
+
+.tab-btn.active {
+    background: var(--color-primary-dim);
+    color: var(--color-primary-hover);
+    box-shadow: var(--shadow-sm);
+}
+
+.tab-panels {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.tab-content {
+    display: none;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+}
+
+.tab-content.active {
+    display: grid;
+    animation: tabReveal 0.35s ease both;
+}
+
+@keyframes tabReveal {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.analysis-card {
+    overflow: hidden;
+    animation: cardIn 0.4s ease both;
+}
+
+.analysis-card:nth-child(1) { animation-delay: 0.04s; }
+.analysis-card:nth-child(2) { animation-delay: 0.1s; }
+.analysis-card:nth-child(3) { animation-delay: 0.16s; }
+
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.analysis-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.analysis-card--error { border-left: 4px solid var(--color-danger); }
+.analysis-card--oop { border-left: 4px solid var(--color-info); }
+.analysis-card--smell { border-left: 4px solid var(--color-warning); }
+.analysis-card--refactor { border-left: 4px solid var(--color-success); }
+
+.card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.card-header__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-header__title h3 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.card-header__title--error h3 { color: #fca5a5; }
+.card-header__title--oop h3 { color: #93c5fd; }
+
+.line-badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.ai-panel {
+    display: none;
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.ai-panel--error {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #fecaca;
+}
+
+.ai-panel--oop {
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    color: #bfdbfe;
+}
+
+.ai-panel--smell {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: #fde68a;
+}
+
+.ai-panel--refactor {
+    background: rgba(34, 211, 238, 0.08);
+    border: 1px solid rgba(34, 211, 238, 0.25);
+    color: #a5f3fc;
+}
+
+.empty-card {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    gap: 0.5rem;
+}
+
+.empty-card__icon {
+    font-size: 3rem;
+}
+
+.empty-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+}
+
+.empty-card p {
+    color: var(--color-text-muted);
+}
+
+.smells-section {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.card-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.card-banner--warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #fcd34d;
+}
+
+.card-banner--success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #6ee7b7;
+}
+
+.card-banner h3 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    margin: 0;
+}
+
+.smell-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding: 1.25rem;
+}
+
+.smell-item {
+    display: grid;
+    gap: 0.5rem;
+    padding: 1rem 1.15rem;
+    padding-right: 8rem;
+    position: relative;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.smell-item__actions {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.smell-item strong {
+    color: #fca5a5;
+}
+
+.smell-item__meta {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+.smell-item__suggestion {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+    border-left: 3px solid var(--color-info);
+    background: rgba(59, 130, 246, 0.06);
+    color: var(--color-text-muted);
+}
+
+.refactor-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: #050810;
+    color: var(--color-success);
+}
+
+.refactor-header__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.refactor-code-wrap {
+    padding: 1.25rem;
+    background: #050810;
+}
+
+.refactor-code-wrap .code-block {
+    border-color: var(--color-border);
+}
+
+@media (max-width: 640px) {
+    .smell-item {
+        padding-right: 1.15rem;
+        padding-top: 3.25rem;
+    }
+
+    .smell-item__actions {
+        left: 1rem;
+        right: 1rem;
+        top: 0.75rem;
+    }
+}

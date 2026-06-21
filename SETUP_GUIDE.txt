@@ -1,0 +1,217 @@
+"""
+CODELEN DJANGO + PYTHON + SQL SERVER SETUP GUIDE
+================================================
+
+This guide will help you get your CodeLens application running with Django, Python, 
+and SQL Server database.
+
+STEP 1: INSTALL PYTHON DEPENDENCIES
+====================================
+
+1. Create a virtual environment:
+   Windows:
+   python -m venv venv
+   venv\Scripts\activate
+
+2. Install required packages:
+   pip install -r requirements.txt
+
+   OR manually install:
+   pip install Django==4.2.8
+   pip install pyodbc==5.0.1
+   pip install django-pyodbc-azure==2.1.0.0
+   pip install python-decouple==3.8
+   pip install requests==2.31.0
+
+STEP 2: CONFIGURE SQL SERVER DATABASE
+======================================
+
+Option A: Using SQL Server (Recommended)
+-----------------------------------------
+1. Install ODBC Driver for SQL Server on your machine:
+   - Download from: https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server
+   - Choose "ODBC Driver 17 for SQL Server" or latest
+
+2. Edit codelens/settings.py and update:
+   DATABASES = {
+       'default': {
+           'ENGINE': 'sql_server.pyodbc',
+           'NAME': 'CodeLensDB',           # Your database name
+           'USER': 'sa',                   # Your SQL Server username
+           'PASSWORD': 'YourPassword123',  # Your password
+           'HOST': 'localhost',            # Server address
+           'PORT': 1433,                   # Default SQL Server port
+           'OPTIONS': {
+               'driver': 'ODBC Driver 17 for SQL Server',
+           },
+       }
+    }
+
+3. Create the database in SQL Server:
+   - Use SQL Server Management Studio
+   - Create a new database named "CodeLensDB"
+   - Note: The tables will be created automatically by Django migrations
+
+Option B: Using SQLite (For Testing)
+-------------------------------------
+1. Uncomment the SQLite configuration in codelens/settings.py
+2. This will create a local db.sqlite3 file
+
+STEP 3: RUN MIGRATIONS
+======================
+
+1. Apply migrations to create database tables:
+   python manage.py migrate
+
+2. Create a superuser (admin account):
+   python manage.py createsuperuser
+   - Enter username: admin
+   - Enter email: admin@localhost.com
+   - Enter password: (choose a secure password)
+
+STEP 4: COLLECT STATIC FILES
+=============================
+
+python manage.py collectstatic --noinput
+
+STEP 5: START THE DEVELOPMENT SERVER
+=====================================
+
+python manage.py runserver
+
+This will start the Django development server at: http://localhost:8000/
+
+ACCESS THE APPLICATION
+======================
+
+- Home Page:         http://localhost:8000/
+- User Login:        http://localhost:8000/login/
+- User Signup:       http://localhost:8000/signup/
+- Analysis Results:  http://localhost:8000/functionalities/
+- History:           http://localhost:8000/history/ (requires login)
+- Admin Panel:       http://localhost:8000/admin/ (use superuser credentials)
+
+FEATURES
+========
+
+1. USER AUTHENTICATION
+   - Sign up with email and password
+   - Login with credentials
+   - User profiles tracked
+
+2. CODE ANALYSIS
+   - Paste or upload Python code
+   - AI analyzes code for:
+     * Syntax errors
+     * OOP concepts (classes, inheritance)
+     * Code smells (magic numbers, long methods)
+     * Refactoring suggestions
+
+3. ANALYSIS HISTORY
+   - View all previous analyses
+   - Search and filter analyses
+   - Star/favorite analyses
+   - Delete analyses
+
+4. DATABASE FEATURES
+   - User authentication and profiles
+   - Analysis storage with results
+   - History tracking
+   - User-specific data isolation
+
+PROJECT STRUCTURE
+=================
+
+django_project/
+├── codelens/                     # Main project folder
+│   ├── settings.py              # Database and app configuration
+│   ├── urls.py                  # URL routing
+│   ├── wsgi.py                  # WSGI application
+│   ├── templates/               # HTML templates (converted to Django templates)
+│   │   ├── HomePage.html
+│   │   ├── login.html
+│   │   ├── signup.html
+│   │   ├── functionalities.html
+│   │   └── history.html
+│   ├── static/                  # CSS and JavaScript files
+│   │   ├── css/
+│   │   │   ├── HomePage.css
+│   │   │   ├── loginsingnup.css
+│   │   │   ├── functionalities.css
+│   │   │   └── history.css
+│   │   └── js/
+│   │       ├── main.js          # Main page interactivity
+│   │       ├── functionalities.js # Tab switching
+│   │       └── history.js       # History interactions
+│   └── analyzer/                # Django app
+│       ├── models.py            # Database models
+│       ├── views.py             # View logic
+│       ├── urls.py              # App URL routing
+│       ├── admin.py             # Admin configuration
+│       ├── apps.py
+│       └── migrations/          # Database migrations
+├── manage.py
+└── requirements.txt
+
+IMPORTANT SETTINGS
+==================
+
+1. SQL SERVER CONNECTION (codelens/settings.py)
+   - Change USER, PASSWORD, HOST as per your SQL Server setup
+   - DATABASE NAME defaults to 'CodeLensDB'
+
+2. SECURITY (Production)
+   - Change SECRET_KEY to a unique, secure value
+   - Set DEBUG = False in production
+   - Set ALLOWED_HOSTS = ['yourdomain.com']
+
+3. STATIC FILES
+   - CSS and JS files are in codelens/static/
+   - Run "collect static" before production deployment
+
+TROUBLESHOOTING
+===============
+
+1. "ODBC Driver not found" error:
+   - Install ODBC Driver 17 for SQL Server
+   - Ensure 'ODBC Driver 17 for SQL Server' is the correct name
+
+2. Database connection fails:
+   - Verify SQL Server is running
+   - Check username and password
+   - Ensure database exists
+   - Try connecting via SQL Server Management Studio first
+
+3. Static files not loading:
+   - Run: python manage.py collectstatic
+   - Check STATIC_ROOT and STATICFILES_DIRS in settings.py
+
+4. Page routing not working:
+   - Ensure all Django migrations are applied
+   - Check urls.py configuration
+   - Verify template names match in views.py
+
+NEXT STEPS
+==========
+
+1. Start the server: python manage.py runserver
+2. Visit http://localhost:8000/
+3. Sign up for an account
+4. Test the code analysis feature
+5. Check analysis history
+6. Visit Django admin at http://localhost:8000/admin/
+
+For production deployment, refer to Django deployment documentation:
+https://docs.djangoproject.com/en/4.2/howto/deployment/
+
+CONTACT & SUPPORT
+=================
+
+This is a CodeLens application built with:
+- Django 4.2.8
+- Python 3.8+
+- SQL Server (or SQLite)
+- HTML5, CSS3, JavaScript ES6
+
+For Django documentation: https://docs.djangoproject.com/
+For SQL Driver info: https://learn.microsoft.com/en-us/sql/connect/odbc/

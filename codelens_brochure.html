@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CodeLens — Trifold Brochure</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ==============================
+       RESET & BASE
+    ============================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:    #080e1a;
+      --navy2:   #0d1520;
+      --navy3:   #111d2e;
+      --cyan:    #00d4ff;
+      --purple:  #7b2fbe;
+      --violet:  #9b59f5;
+      --white:   #ffffff;
+      --offwhite:#e8edf5;
+      --muted:   #8899aa;
+      --green:   #00e676;
+      --amber:   #ffb300;
+      --red:     #ff4d6d;
+      --grad1: linear-gradient(135deg, #00d4ff 0%, #7b2fbe 100%);
+      --grad2: linear-gradient(135deg, #7b2fbe 0%, #00d4ff 100%);
+      --grad3: linear-gradient(180deg, #080e1a 0%, #111d2e 100%);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1a1a2e;
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px;
+      gap: 30px;
+    }
+
+    h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+
+    /* ==============================
+       SCREEN CONTROLS
+    ============================== */
+    .screen-controls {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 14px 24px;
+      backdrop-filter: blur(10px);
+    }
+
+    .screen-controls h2 {
+      font-size: 1rem;
+      color: var(--cyan);
+      font-weight: 600;
+      margin-right: 10px;
+    }
+
+    .btn-print {
+      background: var(--grad1);
+      color: #fff;
+      border: none;
+      padding: 10px 26px;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: all 0.25s;
+      box-shadow: 0 4px 20px rgba(0,212,255,0.25);
+    }
+
+    .btn-print:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0,212,255,0.4);
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .page-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.8rem;
+      color: var(--violet);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      align-self: flex-start;
+    }
+
+    /* ==============================
+       BROCHURE SHEET
+    ============================== */
+    .sheet {
+      width: 297mm;
+      height: 210mm;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow:
+        0 30px 80px rgba(0,0,0,0.8),
+        0 0 0 1px rgba(255,255,255,0.06);
+      position: relative;
+    }
+
+    /* Fold lines */
+    .sheet::before,
+    .sheet::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 1px;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.12) 0px,
+        rgba(255,255,255,0.12) 6px,
+        transparent 6px,
+        transparent 12px
+      );
+      z-index: 10;
+      pointer-events: none;
+    }
+    .sheet::before { left: calc(100% / 3); }
+    .sheet::after  { left: calc(200% / 3); }
+
+    .panel {
+      padding: 28px 24px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ==============================
+       PANEL BACKGROUNDS
+    ============================== */
+    .p-cover   { background: var(--grad3); }
+    .p-inside1 { background: linear-gradient(180deg, #0d1520 0%, #0a1628 100%); }
+    .p-inside2 { background: linear-gradient(180deg, #080e1a 0%, #0f1a2d 100%); }
+    .p-inside3 { background: linear-gradient(180deg, #0a1220 0%, #0d1826 100%); }
+    .p-plans   { background: linear-gradient(180deg, #0c1422 0%, #0a1220 100%); }
+    .p-back    { background: linear-gradient(160deg, #070c18 0%, #120a2a 60%, #080e1a 100%); }
+
+    /* ==============================
+       DECORATIVE BLOBS
+    ============================== */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(55px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .blob-cyan   { background: rgba(0,212,255,0.12); }
+    .blob-purple { background: rgba(123,47,190,0.14); }
+    .blob-violet { background: rgba(155,89,245,0.1); }
+
+    .panel > * { position: relative; z-index: 1; }
+
+    /* ==============================
+       SHARED COMPONENTS
+    ============================== */
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,212,255,0.1);
+      border: 1px solid rgba(0,212,255,0.25);
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 0.62rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      width: fit-content;
+    }
+
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      line-height: 1.2;
+      background: var(--grad1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .body-text {
+      font-size: 0.7rem;
+      color: var(--offwhite);
+      line-height: 1.6;
+    }
+
+    .muted { color: var(--muted); font-size: 0.65rem; }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,212,255,0.3), transparent);
+    }
+
+    .icon-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .icon-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .icon-dot.cyan   { background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.3); }
+    .icon-dot.purple { background: rgba(123,47,190,0.2); border: 1px solid rgba(123,47,190,0.35); }
+    .icon-dot.green  { background: rgba(0,230,118,0.15); border: 1px solid rgba(0,230,118,0.3); }
+    .icon-dot.amber  { background: rgba(255,179,0,0.15); border: 1px solid rgba(255,179,0,0.3); }
+    .icon-dot.red    { background: rgba(255,77,109,0.15); border: 1px solid rgba(255,77,109,0.3); }
+    .icon-dot.violet { background: rgba(155,89,245,0.15); border: 1px solid rgba(155,89,245,0.3); }
+
+    .icon-row-text h4 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 2px;
+    }
+    .icon-row-text p {
+      font-size: 0.62rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ==============================
+       COVER PANEL (P1)
+    ============================== */
+    .logo-mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--grad1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: 0 8px 24px rgba(0,212,255,0.35);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: var(--grad1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    .cover-tagline {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.25;
+    }
+
+    .cover-tagline span {
+      background: var(--grad1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .cover-sub {
+      font-size: 0.72rem;
+      color: var(--offwhite);
+      line-height: 1.6;
+    }
+
+    .code-preview {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.58rem;
+      line-height: 1.7;
+      overflow: hidden;
+    }
+
+    .code-line { display: flex; align-items: center; gap: 8px; }
+    .ln { color: rgba(255,255,255,0.2); font-size: 0.52rem; min-width: 14px; }
+    .kw  { color: var(--violet); }
+    .fn  { color: var(--cyan); }
+    .str { color: var(--green); }
+    .num { color: var(--amber); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .err-badge {
+      background: rgba(255,77,109,0.2);
+      border: 1px solid rgba(255,77,109,0.5);
+      color: var(--red);
+      font-size: 0.5rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: 'Inter', sans-serif;
+    }
+    .ok-badge {
+      background: rgba(0,230,118,0.15);
+      border: 1px solid rgba(0,230,118,0.4);
+      color: var(--green);
+      font-size: 0.5rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pill {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 0.6rem;
+      color: var(--offwhite);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 500;
+    }
+    .pill.cyan   { border-color: rgba(0,212,255,0.3); color: var(--cyan); }
+    .pill.purple { border-color: rgba(155,89,245,0.3); color: var(--violet); }
+    .pill.green  { border-color: rgba(0,230,118,0.3); color: var(--green); }
+
+    .cover-footer {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cover-footer .label {
+      font-size: 0.58rem;
+      color: var(--muted);
+      font-family: 'Fira Code', monospace;
+    }
+
+    .free-badge {
+      background: var(--grad1);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.6rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    /* ==============================
+       INSIDE PANEL 1 (P2 — What is)
+    ============================== */
+    .problem-box {
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .problem-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.65rem;
+      color: var(--offwhite);
+    }
+
+    .problem-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .audience-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .audience-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 8px 7px;
+      text-align: center;
+    }
+
+    .audience-card .emo { font-size: 1rem; display: block; margin-bottom: 4px; }
+    .audience-card h4 { font-size: 0.62rem; font-weight: 700; color: var(--cyan); margin-bottom: 2px; }
+    .audience-card p  { font-size: 0.55rem; color: var(--muted); line-height: 1.4; }
+
+    .quote-box {
+      background: linear-gradient(135deg, rgba(0,212,255,0.06), rgba(123,47,190,0.08));
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 12px;
+      font-size: 0.65rem;
+      color: var(--offwhite);
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    /* ==============================
+       INSIDE PANEL 2 (P3 — Features)
+    ============================== */
+    .feature-card {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      padding: 9px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .feature-card-header {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .feature-num {
+      width: 18px;
+      height: 18px;
+      background: var(--grad1);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.55rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 800;
+      color: #000;
+      flex-shrink: 0;
+    }
+
+    .feature-card h4 {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .feature-card p {
+      font-size: 0.6rem;
+      color: var(--muted);
+      line-height: 1.5;
+      padding-left: 25px;
+    }
+
+    .smell-mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+
+    .smell-chip {
+      background: rgba(255,179,0,0.08);
+      border: 1px solid rgba(255,179,0,0.2);
+      border-radius: 5px;
+      padding: 3px 7px;
+      font-size: 0.55rem;
+      color: var(--amber);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+    }
+
+    /* ==============================
+       INSIDE PANEL 3 (P4 — How It Works)
+    ============================== */
+    .steps-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+    }
+
+    .step-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .step-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--grad1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(0,212,255,0.3);
+    }
+
+    .step-line {
+      width: 2px;
+      flex: 1;
+      background: linear-gradient(to bottom, rgba(0,212,255,0.4), rgba(123,47,190,0.2));
+      min-height: 18px;
+      margin-top: 4px;
+    }
+
+    .step-right {
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+
+    .step-right h4 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 3px;
+    }
+
+    .step-right p {
+      font-size: 0.62rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .tabs-mini {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .tab-item {
+      flex: 1;
+      text-align: center;
+      padding: 5px 4px;
+      font-size: 0.55rem;
+      color: var(--muted);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+    }
+
+    .tab-item.active {
+      background: rgba(0,212,255,0.1);
+      color: var(--cyan);
+      border-bottom: 2px solid var(--cyan);
+    }
+
+    .tab-content {
+      padding: 8px 10px;
+      font-size: 0.6rem;
+      color: var(--offwhite);
+      line-height: 1.6;
+    }
+
+    .history-mini {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .history-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 6px;
+      padding: 5px 8px;
+    }
+
+    .history-row .name {
+      font-size: 0.6rem;
+      color: var(--offwhite);
+      font-family: 'Fira Code', monospace;
+    }
+
+    .history-row .tag {
+      font-size: 0.52rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+    }
+
+    .tag-done { background: rgba(0,230,118,0.12); color: var(--green); }
+    .tag-star { background: rgba(255,179,0,0.12); color: var(--amber); }
+
+    /* ==============================
+       PLANS PANEL (P5)
+    ============================== */
+    .plans-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .plan-card {
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 9px;
+      padding: 9px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .plan-card.featured {
+      background: linear-gradient(135deg, rgba(0,212,255,0.07), rgba(123,47,190,0.1));
+      border-color: rgba(0,212,255,0.3);
+    }
+
+    .plan-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .plan-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--white);
+    }
+
+    .plan-badge {
+      font-size: 0.55rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+    }
+
+    .plan-badge.free   { background: rgba(255,255,255,0.1); color: var(--offwhite); }
+    .plan-badge.pro    { background: rgba(0,212,255,0.15); color: var(--cyan); border: 1px solid rgba(0,212,255,0.3); }
+    .plan-badge.ultra  { background: var(--grad1); color: #000; }
+
+    .plan-limit {
+      font-size: 0.62rem;
+      color: var(--muted);
+    }
+    .plan-limit strong { color: var(--cyan); }
+
+    .plan-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+
+    .pf {
+      font-size: 0.55rem;
+      color: var(--offwhite);
+      background: rgba(255,255,255,0.05);
+      border-radius: 3px;
+      padding: 2px 6px;
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+
+    .tech-chip {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      padding: 5px 8px;
+    }
+
+    .tech-chip .lbl {
+      font-size: 0.52rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'Space Grotesk', sans-serif;
+      margin-bottom: 2px;
+    }
+
+    .tech-chip .val {
+      font-size: 0.6rem;
+      color: var(--cyan);
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* ==============================
+       BACK PANEL (P6)
+    ============================== */
+    .back-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    .back-logo-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--grad1);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.7rem;
+      box-shadow: 0 12px 35px rgba(0,212,255,0.4), 0 0 60px rgba(0,212,255,0.15);
+    }
+
+    .back-brand {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: var(--grad1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+    }
+
+    .back-sub {
+      font-size: 0.65rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .cta-box {
+      background: linear-gradient(135deg, rgba(0,212,255,0.08) 0%, rgba(123,47,190,0.12) 100%);
+      border: 1px solid rgba(0,212,255,0.25);
+      border-radius: 12px;
+      padding: 14px 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cta-box .headline {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.2;
+    }
+
+    .cta-box .headline span {
+      background: var(--grad1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .cta-box .sub-cta {
+      font-size: 0.64rem;
+      color: var(--muted);
+    }
+
+    .cta-button-fake {
+      background: var(--grad1);
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #000;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 20px rgba(0,212,255,0.3);
+    }
+
+    .benefits-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .benefit-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.63rem;
+      color: var(--offwhite);
+    }
+
+    .check {
+      width: 15px;
+      height: 15px;
+      background: rgba(0,230,118,0.15);
+      border: 1px solid rgba(0,230,118,0.35);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      flex-shrink: 0;
+    }
+
+    .contact-block {
+      margin-top: auto;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 11px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .contact-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+    }
+    .contact-icon.email  { background: rgba(0,212,255,0.12); border: 1px solid rgba(0,212,255,0.25); }
+    .contact-icon.github { background: rgba(155,89,245,0.12); border: 1px solid rgba(155,89,245,0.25); }
+
+    .contact-row .lbl {
+      font-size: 0.52rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .contact-row .val {
+      font-size: 0.65rem;
+      color: var(--cyan);
+      font-family: 'Fira Code', monospace;
+      font-weight: 500;
+    }
+
+    .back-tagline {
+      text-align: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.6rem;
+      color: var(--muted);
+      font-style: italic;
+      padding-top: 6px;
+    }
+
+    /* ==============================
+       PRINT STYLES
+    ============================== */
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
+
+      body {
+        background: #000 !important;
+        padding: 0;
+        min-height: auto;
+        gap: 0;
+      }
+
+      .screen-controls,
+      .page-label {
+        display: none !important;
+      }
+
+      .sheet {
+        width: 297mm;
+        height: 210mm;
+        border-radius: 0;
+        box-shadow: none;
+        page-break-after: always;
+        break-after: page;
+      }
+
+      .sheet:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SCREEN CONTROLS -->
+  <div class="screen-controls">
+    <h2>🖨️ CodeLens Brochure</h2>
+    <button class="btn-print" onclick="window.print()">🖨️ Print Brochure</button>
+    <span class="hint">Use A4 Landscape · Disable margins · Enable background graphics</span>
+  </div>
+
+  <!-- ============================
+       SHEET 1 — OUTSIDE
+       (Back | Panel 5 | Front Cover)
+  ============================= -->
+  <span class="page-label">📄 Outside (Print Side 1)</span>
+  <div class="sheet" id="outside">
+
+    <!-- PANEL 6 — BACK (leftmost on outside) -->
+    <div class="panel p-back">
+      <div class="blob blob-purple" style="width:140px;height:140px;top:-40px;left:-40px;"></div>
+      <div class="blob blob-cyan"   style="width:100px;height:100px;bottom:20px;right:-30px;"></div>
+
+      <div class="back-logo">
+        <div class="back-logo-icon">🔍</div>
+        <div class="back-brand">CodeLens</div>
+        <div class="back-sub">AI-Powered Python Code Analysis</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="cta-box">
+        <div class="headline">Start Analyzing<br/><span>For Free Today</span></div>
+        <div class="sub-cta">No credit card required.<br/>30 free analyses every day.</div>
+        <div class="cta-button-fake">🚀 Sign Up Free</div>
+      </div>
+
+      <div class="benefits-list">
+        <div class="benefit-row"><div class="check">✓</div> Instant Python code analysis</div>
+        <div class="benefit-row"><div class="check">✓</div> Detects errors, smells & OOP flaws</div>
+        <div class="benefit-row"><div class="check">✓</div> AI auto-refactors your code</div>
+        <div class="benefit-row"><div class="check">✓</div> GitHub &amp; Gist integration</div>
+        <div class="benefit-row"><div class="check">✓</div> Personal history &amp; favourites</div>
+      </div>
+
+      <div class="contact-block">
+        <div class="section-tag">📬 Contact Us</div>
+        <div class="contact-row">
+          <div class="contact-icon email">📧</div>
+          <div>
+            <div class="lbl">Email</div>
+            <div class="val">teamcodelens@gmail.com</div>
+          </div>
+        </div>
+        <div class="contact-row">
+          <div class="contact-icon github">🐙</div>
+          <div>
+            <div class="lbl">GitHub</div>
+            <div class="val">github.com/teamcodelens</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="back-tagline">"Write less bad code. Ship better software."</div>
+    </div>
+
+    <!-- PANEL 5 — PLANS (middle on outside) -->
+    <div class="panel p-plans">
+      <div class="blob blob-violet" style="width:120px;height:120px;top:-30px;right:-30px;"></div>
+
+      <div class="section-tag">⚡ Plans</div>
+      <div class="section-title">Plans &amp; Pricing</div>
+
+      <div class="plans-grid">
+
+        <div class="plan-card">
+          <div class="plan-header">
+            <div class="plan-name">🆓 Free</div>
+            <div class="plan-badge free">Free</div>
+          </div>
+          <div class="plan-limit"><strong>30</strong> analyses / day</div>
+          <div class="plan-features">
+            <span class="pf">✅ Errors</span>
+            <span class="pf">✅ Smells</span>
+            <span class="pf">✅ OOP</span>
+            <span class="pf">✅ AI Fix</span>
+            <span class="pf">✅ GitHub</span>
+            <span class="pf">✅ History</span>
+          </div>
+        </div>
+
+        <div class="plan-card featured">
+          <div class="plan-header">
+            <div class="plan-name">⚡ Pro</div>
+            <div class="plan-badge pro">Popular</div>
+          </div>
+          <div class="plan-limit"><strong>200</strong> analyses / day</div>
+          <div class="plan-features">
+            <span class="pf">✅ All Free features</span>
+            <span class="pf">✅ Priority processing</span>
+            <span class="pf">✅ Faster AI results</span>
+          </div>
+        </div>
+
+        <div class="plan-card">
+          <div class="plan-header">
+            <div class="plan-name">🚀 Ultra</div>
+            <div class="plan-badge ultra">Best</div>
+          </div>
+          <div class="plan-limit"><strong>Unlimited</strong> analyses</div>
+          <div class="plan-features">
+            <span class="pf">✅ All Pro features</span>
+            <span class="pf">✅ Unlimited quota</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-tag" style="background:rgba(155,89,245,0.1);border-color:rgba(155,89,245,0.25);color:var(--violet);">🛠️ Technology</div>
+
+      <div class="tech-grid">
+        <div class="tech-chip">
+          <div class="lbl">Backend</div>
+          <div class="val">Python · Django 4.2</div>
+        </div>
+        <div class="tech-chip">
+          <div class="lbl">AI Engine</div>
+          <div class="val">Qwen2.5-Coder-32B</div>
+        </div>
+        <div class="tech-chip">
+          <div class="lbl">Database</div>
+          <div class="val">MS SQL Server</div>
+        </div>
+        <div class="tech-chip">
+          <div class="lbl">Analysis</div>
+          <div class="val">Python AST</div>
+        </div>
+        <div class="tech-chip">
+          <div class="lbl">Security</div>
+          <div class="val">CSRF · Hashed PW</div>
+        </div>
+        <div class="tech-chip">
+          <div class="lbl">Frontend</div>
+          <div class="val">JS · CSS</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-tag" style="background:rgba(0,230,118,0.08);border-color:rgba(0,230,118,0.25);color:var(--green);">🔒 Security</div>
+      <div class="body-text">
+        All passwords are hashed — never stored as plain text.<br/>
+        CSRF protection on every form. Each user sees only their own analyses.<br/>
+        Secure session management built in.
+      </div>
+    </div>
+
+    <!-- PANEL 1 — FRONT COVER (rightmost on outside) -->
+    <div class="panel p-cover">
+      <div class="blob blob-cyan"   style="width:160px;height:160px;top:-50px;right:-50px;"></div>
+      <div class="blob blob-purple" style="width:120px;height:120px;bottom:30px;left:-40px;"></div>
+
+      <div class="logo-mark">
+        <div class="logo-icon">🔍</div>
+        <div class="logo-text">CodeLens</div>
+      </div>
+
+      <div class="cover-tagline">
+        See the Flaws.<br/>
+        Fix the Code.<br/>
+        <span>Instantly.</span>
+      </div>
+
+      <div class="cover-sub">
+        AI-powered Python code analysis — detect errors, code smells, and OOP violations in seconds. Let the AI rewrite your messy code automatically.
+      </div>
+
+      <div class="code-preview">
+        <div class="code-line">
+          <span class="ln">1</span>
+          <span><span class="kw">def</span> <span class="fn">calculate</span>(x):</span>
+        </div>
+        <div class="code-line">
+          <span class="ln">2</span>
+          <span>&nbsp;&nbsp;<span class="kw">return</span> x * <span class="num">0.05</span></span>
+          <span class="err-badge">⚠ Magic #</span>
+        </div>
+        <div class="code-line">
+          <span class="ln">3</span>
+          <span><span class="cm"># → AI Surgeon refactoring...</span></span>
+        </div>
+        <div class="code-line">
+          <span class="ln">4</span>
+          <span>TAX_RATE = <span class="num">0.05</span></span>
+          <span class="ok-badge">✓ Fixed</span>
+        </div>
+        <div class="code-line">
+          <span class="ln">5</span>
+          <span><span class="kw">def</span> <span class="fn">calculate</span>(x):</span>
+        </div>
+        <div class="code-line">
+          <span class="ln">6</span>
+          <span>&nbsp;&nbsp;<span class="kw">return</span> x * TAX_RATE</span>
+        </div>
+      </div>
+
+      <div class="pill-row">
+        <span class="pill cyan">🐛 Error Detection</span>
+        <span class="pill purple">🏛️ OOP Analysis</span>
+        <span class="pill green">🤖 AI Refactoring</span>
+        <span class="pill">🐙 GitHub Import</span>
+      </div>
+
+      <div class="cover-footer">
+        <span class="label">v1.0 · Python 3.8+ · Django 4.2</span>
+        <span class="free-badge">Free to Start</span>
+      </div>
+    </div>
+
+  </div><!-- /sheet outside -->
+
+
+  <!-- ============================
+       SHEET 2 — INSIDE
+       (Panel 2 | Panel 3 | Panel 4)
+  ============================= -->
+  <span class="page-label">📄 Inside (Print Side 2)</span>
+  <div class="sheet" id="inside">
+
+    <!-- PANEL 2 — WHAT IS CODELENS -->
+    <div class="panel p-inside1">
+      <div class="blob blob-purple" style="width:130px;height:130px;bottom:-30px;left:-40px;"></div>
+
+      <div class="section-tag">💡 About</div>
+      <div class="section-title">What is CodeLens?</div>
+
+      <div class="body-text">
+        <strong style="color:var(--cyan);">CodeLens</strong> is an intelligent web platform that automatically reads your Python code and delivers a professional-grade analysis — instantly.
+        <br/><br/>
+        Whether you're a student, developer, or educator, CodeLens saves hours of manual review with zero configuration needed.
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-tag" style="background:rgba(255,77,109,0.08);border-color:rgba(255,77,109,0.25);color:var(--red);">🔴 The Problem</div>
+
+      <div class="problem-box">
+        <div class="problem-row">
+          <div class="problem-dot" style="background:var(--red);"></div>
+          <span>Syntax errors that crash the program</span>
+        </div>
+        <div class="problem-row">
+          <div class="problem-dot" style="background:var(--amber);"></div>
+          <span>Code smells — magic numbers, long functions</span>
+        </div>
+        <div class="problem-row">
+          <div class="problem-dot" style="background:var(--violet);"></div>
+          <span>OOP violations — missing classes, bad design</span>
+        </div>
+        <div class="problem-row">
+          <div class="problem-dot" style="background:var(--muted);"></div>
+          <span>Hard-to-read logic that breaks under change</span>
+        </div>
+      </div>
+
+      <div class="quote-box">
+        "If code works but looks messy or confusing — refactor it." <br/>
+        <span style="color:var(--muted);font-size:0.6rem;">— The Golden Rule of Clean Code</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-tag" style="background:rgba(0,212,255,0.08);border-color:rgba(0,212,255,0.2);color:var(--cyan);">👥 Who Is It For?</div>
+
+      <div class="audience-grid">
+        <div class="audience-card">
+          <span class="emo">👨‍🎓</span>
+          <h4>Students</h4>
+          <p>Improve code quality before submission</p>
+        </div>
+        <div class="audience-card">
+          <span class="emo">👩‍💻</span>
+          <h4>Developers</h4>
+          <p>Review &amp; refactor code instantly</p>
+        </div>
+        <div class="audience-card">
+          <span class="emo">🏫</span>
+          <h4>Educators</h4>
+          <p>Evaluate &amp; grade student code</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 3 — CORE FEATURES -->
+    <div class="panel p-inside2">
+      <div class="blob blob-cyan"   style="width:120px;height:120px;top:-30px;right:-30px;"></div>
+      <div class="blob blob-purple" style="width:100px;height:100px;bottom:0;left:-20px;"></div>
+
+      <div class="section-tag">✨ Features</div>
+      <div class="section-title">What CodeLens Detects</div>
+
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-num">1</div>
+          <h4>🐛 Error Detection</h4>
+        </div>
+        <p>Spots syntax errors, undefined variables &amp; runtime issues using Python's AST engine with exact line numbers.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-num">2</div>
+          <h4>🏛️ OOP Concept Analysis</h4>
+        </div>
+        <p>Identifies classes, inheritance chains &amp; methods. Flags God Classes, missing encapsulation &amp; design flaws.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-num">3</div>
+          <h4>👃 Code Smell Detection</h4>
+        </div>
+        <div class="smell-mini-grid" style="padding-left:25px;margin-top:2px;">
+          <span class="smell-chip">🔢 Magic Numbers</span>
+          <span class="smell-chip">📏 Long Method</span>
+          <span class="smell-chip">🔀 High Complexity</span>
+          <span class="smell-chip">🏗️ Procedural Code</span>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-num">4</div>
+          <h4>🤖 AI Surgeon (Auto-Refactor)</h4>
+        </div>
+        <p>Powered by <strong style="color:var(--cyan);">Qwen2.5-Coder-32B</strong> — the AI rewrites your smelly code into clean, professional Python automatically.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-num">5</div>
+          <h4>🐙 GitHub &amp; Gist Integration</h4>
+        </div>
+        <p>Paste any GitHub repo URL or Gist link — CodeLens fetches and analyses your Python files directly.</p>
+      </div>
+    </div>
+
+    <!-- PANEL 4 — HOW IT WORKS -->
+    <div class="panel p-inside3">
+      <div class="blob blob-violet" style="width:110px;height:110px;top:-20px;left:-30px;"></div>
+      <div class="blob blob-cyan"   style="width:90px;height:90px;bottom:20px;right:-20px;"></div>
+
+      <div class="section-tag">🚀 Workflow</div>
+      <div class="section-title">How It Works</div>
+      <div class="muted">4 simple steps — no configuration needed</div>
+
+      <div class="steps-container">
+        <div class="step-item">
+          <div class="step-left">
+            <div class="step-circle">1</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-right">
+            <h4>📝 Paste or Upload Code</h4>
+            <p>Type, paste Python code or upload a <span style="color:var(--cyan);font-family:'Fira Code',monospace;">.py</span> file. Or paste a GitHub URL directly.</p>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-left">
+            <div class="step-circle">2</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-right">
+            <h4>▶️ Click Analyze</h4>
+            <p>CodeLens runs the full analysis engine in seconds. No sign-in needed to get started.</p>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-left">
+            <div class="step-circle">3</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-right">
+            <h4>📊 View Tabbed Results</h4>
+            <div class="tabs-mini" style="margin-top:5px;">
+              <div class="tab-bar">
+                <div class="tab-item active">Errors</div>
+                <div class="tab-item">OOP</div>
+                <div class="tab-item">Smells &amp; AI Fix</div>
+              </div>
+              <div class="tab-content">
+                🔴 SyntaxError on line 4<br/>
+                🟡 Magic number '0.05' detected<br/>
+                🟢 AI Surgeon: code refactored ✓
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-left">
+            <div class="step-circle">4</div>
+          </div>
+          <div class="step-right">
+            <h4>💾 Save &amp; Track History</h4>
+            <p>Every analysis is saved. Search, filter, star favourites &amp; revisit any past result.</p>
+            <div class="history-mini" style="margin-top:6px;">
+              <div class="history-row">
+                <span class="name">calculator.py</span>
+                <span class="tag tag-star">⭐ Starred</span>
+              </div>
+              <div class="history-row">
+                <span class="name">data_processor.py</span>
+                <span class="tag tag-done">✓ Done</span>
+              </div>
+              <div class="history-row">
+                <span class="name">github.com/myrepo</span>
+                <span class="tag tag-done">✓ Done</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /sheet inside -->
+
+</body>
+</html>
